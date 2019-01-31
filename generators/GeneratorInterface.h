@@ -8,7 +8,13 @@
 #include "../datatypes.h"
 
 class GeneratorInterface {
+public:
+    GeneratorInterface(unsigned int num_of_vertices) : n(num_of_vertices) {}
+    GeneratorInterface(unsigned int num_of_vertices, unsigned int kk) : n(num_of_vertices), k(kk) {}
     virtual Graph generate() = 0;
+
+protected:
+    unsigned int n, k;
 };
 
 

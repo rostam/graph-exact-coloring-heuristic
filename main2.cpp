@@ -1,7 +1,7 @@
 #include <iostream>
 #include "datatypes.h"
 #include "generators/Cycle.h"
-#include "generators/GeneralizedPetersonGenerator.h"
+#include "generators/GeneralizedPeterson.h"
 using namespace std;
 
 template<typename T>

@@ -1,15 +1,15 @@
-//
-// Created by rostami on 28.06.17.
-//
-
+/**
+ * Created by rostami on 28.06.17.
+*/
 #ifndef EXACT_COLORING_GENERALIZEDPETERSONGENERATOR_H
 #define EXACT_COLORING_GENERALIZEDPETERSONGENERATOR_H
 
 #include "GeneratorInterface.h"
 
-class GeneralizedPetersonGenerator {
+class GeneralizedPeterson : public GeneratorInterface {
 public:
-    Graph generate(unsigned int n, unsigned int k) {
+    GeneralizedPeterson(unsigned int n, unsigned int k) : GeneratorInterface(n, k) {}
+    Graph generate() {
         Graph g;
         int counter = 0;
         for (int i = 0; i < n; i++) {

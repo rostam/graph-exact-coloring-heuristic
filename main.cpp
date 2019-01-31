@@ -3,14 +3,15 @@
 #include <algorithm>
 #include "datatypes.h"
 #include "Mtx2Graph.hpp"
+#include "generators/GeneralizedPeterson.h"
 
 using namespace std;
 
 #include "exact_coloring/exact_coloring.h"
-#include "generators/GeneralizedPetersonGenerator.h"
+#include "generators/GeneralizedPeterson.h"
 
 int main(void) {
-    Graph g = GeneralizedPetersonGenerator().generate(5,2);
+    Graph g = GeneralizedPeterson(5,2).generate();
 
 //    add_edge(0,1,g);
 //    add_edge(1,2,g);

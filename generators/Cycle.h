@@ -7,11 +7,13 @@
 
 #include "GeneratorInterface.h"
 
-class Cycle {
+class Cycle : public GeneratorInterface {
 public:
-    Graph generate(unsigned int n) {
+    Cycle(int n) : GeneratorInterface(n) {};
+    Graph generate() {
         Graph g;
-        for (int i = 0; i < n; i++)add_edge(i, ((i + 1) % n),g);
+        for (int i = 0; i < n; i++)
+            add_edge(i, ((i + 1) % n),g);
         return g;
     }
 };
