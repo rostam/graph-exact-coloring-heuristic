@@ -1,7 +1,6 @@
-//
-// Created by rostami on 28.06.17.
-//
-
+/**
+ * Created by rostami on 28.06.17.
+ */
 #ifndef EXACT_COLORING_CYCLE_H
 #define EXACT_COLORING_CYCLE_H
 
