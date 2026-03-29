@@ -1,34 +1,29 @@
 #include <iostream>
 #include <set>
-#include <algorithm>
-#include "datatypes.h"
-#include "Mtx2Graph.hpp"
-#include "generators/GeneralizedPeterson.h"
-#include "generators/Cycle.h"
-#include "exact_coloring/exact_coloring.h"
 
-using namespace std;
+#include "datatypes.h"
+#include "exact_coloring/exact_coloring.h"
+#include "generators/Cycle.h"
+#include "generators/GeneralizedPeterson.h"
 
 int main() {
-    Graph g = GeneralizedPeterson(5,2).generate();
-    cerr << "Number of vertices: " << num_vertices(g) << endl;
-
-    for(int i=2;i<10;i++) {
-        int res =c_k(gen_ind_set_for_g(g),g,i);
-        if(res!=0) {
-            cerr << "The number of color for Generalized Peterson (5,2): " << i << endl;
+    // Generalized Petersen graph GP(5,2) — the Petersen graph, χ = 3
+    Graph g = GeneralizedPeterson(5, 2).generate();
+    std::cout << "GP(5,2): " << num_vertices(g) << " vertices\n";
+    for (int k = 2; k < 10; k++) {
+        if (c_k(gen_ind_set_for_g(g), g, k) != 0) {
+            std::cout << "Chromatic number of GP(5,2): " << k << "\n";
             break;
         }
     }
 
-    for(int ii=3;ii <= 6;ii++) {
-        g = Cycle(ii).generate();
-        cerr << "Number of vertices: " << num_vertices(g) << endl;
-
-        for (int i = 2; i < 10; i++) {
-            int res = c_k(gen_ind_set_for_g(g), g, i);
-            if (res != 0) {
-                cerr << "The number of color for cycle " << i << ":" << endl;
+    // Cycle graphs C_3 through C_6
+    for (int n = 3; n <= 6; n++) {
+        g = Cycle(n).generate();
+        std::cout << "C_" << n << ": " << num_vertices(g) << " vertices\n";
+        for (int k = 2; k < 10; k++) {
+            if (c_k(gen_ind_set_for_g(g), g, k) != 0) {
+                std::cout << "Chromatic number of C_" << n << ": " << k << "\n";
                 break;
             }
         }
