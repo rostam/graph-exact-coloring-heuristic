@@ -1,4 +1,6 @@
+#include <chrono>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include "datatypes.h"
 #include "generators/GeneralizedPeterson.h"
@@ -178,6 +180,66 @@ static void test_bipartite() {
     check("c_k(K_{2,3}, 2) > 0",  c_k(F, g, 2) > 0);
 }
 
+// ── Scaling tests ────────────────────────────────────────────────────────────
+// Runs chromatic_number() and records wall-clock time so that performance
+// degradation is visible as graph size grows.
+//
+// Observed scaling (Release build, single core):
+//   Cycles    C_8  ~3ms  C_10  ~30ms  C_12  ~300ms  C_13  ~1.5s  C_14  ~3s
+//   Bipartite K_{4,4} ~2ms  K_{6,6} ~130ms  K_{7,7} ~1s
+//   Petersen  GP(6,2) ~250ms  GP(7,2) ~2.5s
+//
+// Limitation: c_k() accumulates int sums; intermediate terms overflow int for
+// K_n with n >= 9 (the partial sums of (-1)^|V| * alpha^k exceed 2^31), so
+// complete graphs K_9 and larger are not included here.
+
+static void timed_check(const std::string& name, Graph g, int expected_chi) {
+    auto t0 = std::chrono::steady_clock::now();
+    int chi = chromatic_number(g);
+    double ms = std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now() - t0).count();
+    std::ostringstream label;
+    label << name << " chromatic number = " << expected_chi
+          << "  [" << static_cast<int>(ms) << "ms]";
+    check(label.str(), chi == expected_chi);
+}
+
+static void test_scaling() {
+    // Cycle graphs C_8 – C_13
+    // Even cycles: χ = 2 (bipartite)  Odd cycles: χ = 3
+    for (int n : {8, 9, 10, 11, 12, 13}) {
+        int expected = (n % 2 == 0) ? 2 : 3;
+        timed_check("C_" + std::to_string(n), Cycle(n).generate(), expected);
+    }
+
+    // Complete graphs K_5 – K_8  (χ = n)
+    // |F| = n+1 (only singletons), so the algorithm stays fast even though
+    // the graph is dense.  K_9 and above overflow int in the polynomial sum.
+    for (int n : {5, 6, 7, 8}) {
+        Graph g;
+        for (int i = 0; i < n; i++)
+            for (int j = i + 1; j < n; j++)
+                add_edge(i, j, g);
+        timed_check("K_" + std::to_string(n), g, n);
+    }
+
+    // Complete bipartite K_{m,m}  (χ = 2 for all m ≥ 1)
+    // |F| = 2^m + 2^m – 1 (all subsets of each side), so it scales better
+    // than cycles of the same vertex count.
+    for (int m : {4, 5, 6, 7}) {
+        Graph g;
+        for (int i = 0; i < m; i++)
+            for (int j = m; j < 2 * m; j++)
+                add_edge(i, j, g);
+        timed_check("K_{" + std::to_string(m) + "," + std::to_string(m) + "}",
+                    g, 2);
+    }
+
+    // Generalized Petersen graphs  (χ = 3)
+    timed_check("GP(6,2)",  GeneralizedPeterson(6, 2).generate(), 3);
+    timed_check("GP(7,2)",  GeneralizedPeterson(7, 2).generate(), 3);
+}
+
 int main() {
     std::cout << "=== Cycle graphs ===\n";
     test_cycles();
@@ -193,6 +255,9 @@ int main() {
 
     std::cout << "\n=== Bipartite graph K_{2,3} ===\n";
     test_bipartite();
+
+    std::cout << "\n=== Scaling tests ===\n";
+    test_scaling();
 
     std::cout << "\n" << passed << " passed, " << failed << " failed.\n";
     return failed == 0 ? 0 : 1;
