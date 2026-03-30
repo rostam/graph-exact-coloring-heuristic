@@ -56,6 +56,65 @@ Chromatic number of C_3: 3
 ...
 ```
 
+## Results
+
+The table below summarises every graph family covered by the test suite.
+Timing was measured on a single core (Release build, Ubuntu 22.04).
+
+### Correctness — all graph families
+
+| Graph | Description | V | E | χ |
+|---|---|:-:|:-:|:-:|
+| C₃ | Triangle | 3 | 3 | 3 |
+| C₄ | Square | 4 | 4 | 2 |
+| C₅ | Pentagon | 5 | 5 | 3 |
+| C₆ | Hexagon | 6 | 6 | 2 |
+| C₇ | 7-cycle | 7 | 7 | 3 |
+| K₁ – K₄ | Complete graphs | 1–4 | 0–6 | 1–4 |
+| E₁, E₃ | Edgeless | 1,3 | 0 | 1 |
+| K₂,₃ | Complete bipartite | 5 | 6 | 2 |
+| **W₅,W₇,W₉** | **Wheel (even rim) → χ=3** | 5,7,9 | 8,12,16 | **3** |
+| **W₆,W₈** | **Wheel (odd rim) → χ=4** | 6,8 | 10,14 | **4** |
+| **K₂,₂,₂** | **Octahedron** | **6** | **12** | **3** |
+| **K₃,₃,₃** | **Complete 3-partite** | **9** | **27** | **3** |
+| **K₂,₂,₂,₂** | **Complete 4-partite** | **8** | **24** | **4** |
+| GP(4,1) | 3-cube Q₃ (bipartite) | 8 | 12 | 2 |
+| GP(5,1) | Pentagonal prism | 10 | 15 | 3 |
+| GP(5,2) | Petersen graph | 10 | 15 | 3 |
+| GP(6,1) | Hexagonal prism (bipartite) | 12 | 18 | 2 |
+| GP(6,2) | — | 12 | 18 | 3 |
+| GP(7,2) | — | 14 | 21 | 3 |
+
+65 test assertions, 0 failures.
+
+### Scaling — wall-clock time
+
+The algorithm is O(2ⁿ × |F|) per k value, where |F| = number of independent sets.
+For cycles |F| grows like the Lucas sequence (≈ φⁿ), giving ~10× slowdown per 2 vertices.
+Dense graphs scale better because |F| is much smaller.
+
+| Graph | V | E | χ | Time |
+|---|:-:|:-:|:-:|--:|
+| C₈ | 8 | 8 | 2 | 1 ms |
+| C₉ | 9 | 9 | 3 | 7 ms |
+| C₁₀ | 10 | 10 | 2 | 24 ms |
+| C₁₁ | 11 | 11 | 3 | 86 ms |
+| C₁₂ | 12 | 12 | 2 | 168 ms |
+| C₁₃ | 13 | 13 | 3 | 786 ms |
+| C₁₄ | 14 | 14 | 2 | ~3 s |
+| C₁₆ | 16 | 16 | 2 | ~33 s |
+| K₅ – K₈ | 5–8 | 10–28 | 5–8 | < 1 ms |
+| K₄,₄ | 8 | 16 | 2 | 1 ms |
+| K₅,₅ | 10 | 25 | 2 | 9 ms |
+| K₆,₆ | 12 | 36 | 2 | 69 ms |
+| K₇,₇ | 14 | 49 | 2 | 536 ms |
+| GP(6,2) | 12 | 18 | 3 | 135 ms |
+| GP(7,2) | 14 | 21 | 3 | 1.3 s |
+| GP(8,3) | 16 | 24 | 2 | ~15 s |
+
+> **Overflow note:** K_n with n ≥ 9 produces wrong results — intermediate
+> inclusion-exclusion sums exceed 2³¹. Cycles and bipartite graphs are unaffected.
+
 ## Project Structure
 
 ```

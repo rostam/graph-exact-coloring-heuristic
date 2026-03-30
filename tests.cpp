@@ -26,7 +26,7 @@ static void check(const std::string& name, bool cond) {
 }
 
 // Returns the smallest k >= 1 where c_k is nonzero.
-static int chromatic_number(Graph& g) {
+static int chromatic_number(Graph g) {
     auto F = gen_ind_set_for_g(g);
     for (int k = 1; k <= (int)num_vertices(g); k++)
         if (c_k(F, g, k) != 0) return k;
@@ -180,6 +180,84 @@ static void test_bipartite() {
     check("c_k(K_{2,3}, 2) > 0",  c_k(F, g, 2) > 0);
 }
 
+// ── Interesting graph families ───────────────────────────────────────────────
+// Graphs chosen for theoretical interest rather than size:
+//   wheel graphs (first natural χ=4 examples), complete multipartite graphs
+//   (Platonic solids, clean chromatic structure), and more of the GP family.
+
+// Wheel W_n: hub vertex 0 connected to every vertex of a (n-1)-cycle on 1..n-1.
+// χ(W_n) = 3 if n is odd (even rim → bipartite → 2 colors + hub needs 3rd)
+// χ(W_n) = 4 if n is even (odd rim → 3 colors + hub needs 4th)
+static Graph wheel(int n) {
+    Graph g;
+    for (int i = 1; i < n; i++) {
+        add_edge(0, i, g);                   // spoke: hub to rim vertex i
+        add_edge(i, (i % (n - 1)) + 1, g);  // rim: i to i+1 (wraps back to 1)
+    }
+    return g;
+}
+
+// Complete k-partite graph with each part of size s.
+// Vertices partitioned into k groups of s: part p = { p*s, ..., p*s + s - 1 }.
+// Edges between every pair of vertices in different parts.  χ = k.
+static Graph complete_multipartite(int k, int s) {
+    Graph g;
+    int n = k * s;
+    for (int i = 0; i < n; i++)
+        for (int j = i + 1; j < n; j++)
+            if (i / s != j / s)
+                add_edge(i, j, g);
+    return g;
+}
+
+static void test_interesting_graphs() {
+    // Wheel graphs ────────────────────────────────────────────────────────────
+    // Odd n → even rim C_{n-1} → χ = 3
+    for (int n : {5, 7, 9}) {
+        check("W_" + std::to_string(n) + " chromatic number = 3",
+              chromatic_number(wheel(n)) == 3);
+    }
+    // Even n → odd rim C_{n-1} → χ = 4
+    for (int n : {6, 8}) {
+        check("W_" + std::to_string(n) + " chromatic number = 4",
+              chromatic_number(wheel(n)) == 4);
+    }
+
+    // Complete multipartite graphs ─────────────────────────────────────────────
+    // K_{2,2,2} = octahedron: 6 vertices, 12 edges, χ = 3
+    check("K_{2,2,2} (octahedron) chromatic number = 3",
+          chromatic_number(complete_multipartite(3, 2)) == 3);
+    // K_{3,3,3}: 9 vertices, 27 edges, χ = 3
+    check("K_{3,3,3} chromatic number = 3",
+          chromatic_number(complete_multipartite(3, 3)) == 3);
+    // K_{2,2,2,2}: 8 vertices, 24 edges, χ = 4
+    check("K_{2,2,2,2} chromatic number = 4",
+          chromatic_number(complete_multipartite(4, 2)) == 4);
+
+    // Generalized Petersen family ──────────────────────────────────────────────
+    // GP(4,1) = 3-dimensional hypercube Q_3: 8 vertices, 12 edges, bipartite → χ = 2
+    {
+        Graph g = GeneralizedPeterson(4, 1).generate();
+        check("GP(4,1) = cube Q_3: " + std::to_string(num_vertices(g)) + "v "
+              + std::to_string(num_edges(g)) + "e  chromatic number = 2",
+              chromatic_number(g) == 2);
+    }
+    // GP(5,1) = pentagonal prism: 10 vertices, 15 edges, odd rim → χ = 3
+    {
+        Graph g = GeneralizedPeterson(5, 1).generate();
+        check("GP(5,1) = pentagonal prism: " + std::to_string(num_vertices(g)) + "v "
+              + std::to_string(num_edges(g)) + "e  chromatic number = 3",
+              chromatic_number(g) == 3);
+    }
+    // GP(6,1) = hexagonal prism: 12 vertices, 18 edges, even rim → χ = 2
+    {
+        Graph g = GeneralizedPeterson(6, 1).generate();
+        check("GP(6,1) = hexagonal prism: " + std::to_string(num_vertices(g)) + "v "
+              + std::to_string(num_edges(g)) + "e  chromatic number = 2",
+              chromatic_number(g) == 2);
+    }
+}
+
 // ── Scaling tests ────────────────────────────────────────────────────────────
 // Runs chromatic_number() and records wall-clock time so that performance
 // degradation is visible as graph size grows.
@@ -255,6 +333,9 @@ int main() {
 
     std::cout << "\n=== Bipartite graph K_{2,3} ===\n";
     test_bipartite();
+
+    std::cout << "\n=== Interesting graph families ===\n";
+    test_interesting_graphs();
 
     std::cout << "\n=== Scaling tests ===\n";
     test_scaling();

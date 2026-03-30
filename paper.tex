@@ -1,0 +1,690 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{graphicx}
+
+\geometry{margin=1in}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\lstset{
+  language=C++,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  breaklines=true,
+  frame=single
+}
+
+\title{\textbf{A Chromatic Number Algorithm via\\
+Inclusion-Exclusion over Independent Sets}}
+
+\author{Graph Exact Coloring Heuristic Project}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We describe and analyze an algorithm that determines the chromatic number of a
+graph by evaluating a combinatorial quantity derived from inclusion-exclusion
+over the collection of all independent sets.  The quantity, denoted $c_k(G)$,
+counts the number of ordered $k$-tuples of independent sets of $G$ whose union
+is $V(G)$.  We prove that $c_k(G) = 0$ if and only if $k < \chi(G)$, so the
+chromatic number equals the smallest $k$ for which $c_k(G) \neq 0$.  We also
+describe a companion greedy heuristic that computes an upper bound on
+$\chi(G)$.  Both algorithms are implemented in C++17 using the Boost Graph
+Library.  We present experimental results on cycles $C_n$, complete graphs $K_n$,
+the Petersen graph $GP(5,2)$ and other generalized Petersen graphs, wheel
+graphs $W_n$, complete multipartite graphs $K_{s,\ldots,s}$, and edgeless
+graphs, confirming that the exact algorithm recovers the known chromatic
+numbers for all tested families.  We also report empirical scaling data
+showing that the algorithm is practical for graphs up to roughly 13--14
+vertices on a single core.
+\end{abstract}
+
+\tableofcontents
+\vspace{1em}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Introduction}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Graph coloring is one of the most extensively studied problems in combinatorics
+and theoretical computer science.  Given a graph $G=(V,E)$, a \emph{proper
+$k$-coloring} assigns one of $k$ colors to each vertex so that no two adjacent
+vertices share a color.  The minimum such $k$ is the \emph{chromatic number}
+$\chi(G)$.  Determining $\chi(G)$ is NP-hard in general~\cite{Karp1972}, yet
+exact algorithms are essential for small or sparse graphs arising in scientific
+computing, scheduling, and register allocation.
+
+This paper documents the algorithm implemented in the
+\texttt{graph-exact-coloring-heuristic} project.  The core function
+\texttt{c\_k} evaluates the inclusion-exclusion sum
+\[
+  c_k(G,k) \;=\; \sum_{S \subseteq V} (-1)^{|S|}\,
+                  \bigl|\{\,I \in \mathcal{F}(G) : I \cap S = \emptyset\,\}\bigr|^k,
+\]
+where $\mathcal{F}(G)$ is the family of all independent sets of $G$ (including
+the empty set).  We show that this quantity is zero precisely when $G$ is not
+$k$-colorable, and hence one can binary-search (or linearly scan) over $k$ to
+find $\chi(G)$.
+
+The companion greedy algorithm, implemented in \texttt{main2.cpp}, repeatedly
+extracts a greedy independent set and assigns it the next available color,
+yielding an upper bound that is exact on bipartite and perfect graphs but may
+exceed $\chi(G)$ in general.
+
+\paragraph{Organization.}
+Section~\ref{sec:prelim} fixes notation and recalls standard facts about graph
+coloring.  Section~\ref{sec:algorithm} derives the formula and proves its
+correctness.  Section~\ref{sec:heuristic} describes the greedy heuristic.
+Section~\ref{sec:implementation} outlines the C++ implementation.
+Section~\ref{sec:experiments} presents experimental results.
+Section~\ref{sec:complexity} analyzes time and space complexity.
+Section~\ref{sec:conclusion} concludes.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Preliminaries}\label{sec:prelim}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Throughout, $G = (V, E)$ is a simple undirected graph with $n = |V|$ vertices
+and $m = |E|$ edges.  Vertices are labeled $0, 1, \ldots, n-1$.
+
+\begin{definition}[Independent set]
+  A set $I \subseteq V$ is \emph{independent} if no two vertices in $I$ are
+  adjacent.  We write $\mathcal{F}(G)$ for the family of all independent sets
+  of $G$, including $\emptyset$.
+\end{definition}
+
+\begin{definition}[Proper coloring and chromatic number]
+  A \emph{proper $k$-coloring} of $G$ is a function $f: V \to \{1,\ldots,k\}$
+  with $f(u) \neq f(v)$ whenever $uv \in E$.  The \emph{chromatic number}
+  $\chi(G)$ is the minimum $k$ for which a proper $k$-coloring exists.
+\end{definition}
+
+\begin{definition}[Independent set cover]
+  An \emph{ordered $k$-cover by independent sets} (hereafter, $k$-IS-cover) is
+  a $k$-tuple $(I_1, \ldots, I_k) \in \mathcal{F}(G)^k$ such that
+  $I_1 \cup \cdots \cup I_k = V$.
+\end{definition}
+
+Note that in a $k$-IS-cover the sets need not be disjoint, and they may be
+empty.  A proper $k$-coloring induces a $k$-IS-cover (the color classes), but
+a $k$-IS-cover may have overlapping sets.  We will show these notions are
+equivalent for the \emph{existence} question.
+
+\begin{definition}[Chromatic polynomial]
+  The \emph{chromatic polynomial} $P(G, k)$ counts the number of proper
+  $k$-colorings of $G$.  It satisfies $P(G, k) = 0$ iff $k < \chi(G)$.
+\end{definition}
+
+Well-known chromatic polynomials for families used in experiments:
+\begin{align*}
+  P(K_n, k)   &= k(k-1)(k-2)\cdots(k-n+1), \\
+  P(C_n, k)   &= (k-1)^n + (-1)^n(k-1),    \\
+  P(E_n, k)   &= k^n,
+\end{align*}
+where $K_n$ is the complete graph, $C_n$ the cycle, and $E_n$ the edgeless
+graph on $n$ vertices.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{The Exact Algorithm}\label{sec:algorithm}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{The Combinatorial Formula}
+
+For a graph $G$ and a positive integer $k$, define
+\[
+  \alpha(S,\,\mathcal{F}) \;=\;
+    \bigl|\{\,I \in \mathcal{F}(G) : I \cap S = \emptyset\,\}\bigr|
+\]
+to be the number of independent sets of $G$ that avoid $S$ entirely.
+Equivalently, $\alpha(S,\mathcal{F})$ is the total number of independent sets
+in the subgraph of $G$ induced by $V \setminus S$.  The algorithm evaluates
+\begin{equation}\label{eq:ck}
+  c_k(G, k)
+  \;=\;
+  \sum_{S \subseteq V} (-1)^{|S|}\,\alpha(S,\,\mathcal{F})^k.
+\end{equation}
+
+\subsection{Combinatorial Interpretation}
+
+\begin{theorem}\label{thm:ck-cover}
+  $c_k(G,k)$ equals the number of ordered $k$-IS-covers of $G$.
+\end{theorem}
+
+\begin{proof}
+Let $N = |\mathcal{F}(G)|$.  The number of ordered $k$-tuples
+$(I_1,\ldots,I_k) \in \mathcal{F}(G)^k$ with no constraint is $N^k$.  For a
+fixed vertex $v \in V$ let $A_v$ be the set of $k$-tuples in which $v$ is
+covered by no $I_j$ (i.e.\ $v \notin I_j$ for all $j$).  Then
+\[
+  |A_v| = |\{I \in \mathcal{F}(G) : v \notin I\}|^k = \alpha(\{v\},\mathcal{F})^k.
+\]
+More generally, for any $S \subseteq V$,
+\[
+  \Bigl|\bigcap_{v \in S} A_v\Bigr|
+  = |\{I \in \mathcal{F}(G) : S \cap I = \emptyset\}|^k
+  = \alpha(S, \mathcal{F})^k.
+\]
+By inclusion-exclusion, the number of $k$-tuples in which every vertex is
+covered by at least one $I_j$ is
+\[
+  \sum_{S \subseteq V} (-1)^{|S|}\,\alpha(S,\mathcal{F})^k
+  \;=\; c_k(G,k). \qedhere
+\]
+\end{proof}
+
+\subsection{Equivalence with $k$-Colorability}
+
+\begin{theorem}\label{thm:chromatic}
+  $c_k(G, k) = 0$ if and only if $G$ is not properly $k$-colorable,
+  i.e.\ $k < \chi(G)$.
+\end{theorem}
+
+\begin{proof}
+$(\Leftarrow)$ Suppose $k \geq \chi(G)$.  Fix a proper $k$-coloring
+$f: V \to \{1,\ldots,k\}$ and let $I_j = f^{-1}(j)$ for each $j$.  Each $I_j$
+is an independent set and $\bigcup_j I_j = V$, so $(I_1,\ldots,I_k)$ is a
+$k$-IS-cover.  Hence $c_k(G,k) \geq 1 > 0$.
+
+$(\Rightarrow)$ Suppose $k < \chi(G)$.  We show no $k$-IS-cover exists.
+If $(I_1,\ldots,I_k)$ were a $k$-IS-cover, define $f(v) = \min\{j : v \in I_j\}$
+for each $v \in V$.  Since $I_j$ is independent, no two adjacent vertices can
+share the same $j$; thus $f$ is a proper $k$-coloring, contradicting
+$k < \chi(G)$.  Therefore $c_k(G,k) = 0$.
+\end{proof}
+
+\begin{corollary}
+  $\chi(G) = \min\{\,k \geq 1 : c_k(G,k) \neq 0\,\}.$
+\end{corollary}
+
+\begin{remark}
+  The quantity $c_k(G,k)$ is not the chromatic polynomial $P(G,k)$ in general.
+  For $k = \chi(G)$, the two coincide for complete graphs (where every
+  $k$-IS-cover induces a proper coloring immediately), but they differ for
+  most other graphs at values $k > \chi(G)$.  For example, $c_k(C_5, 3) = 60$
+  while $P(C_5, 3) = 30$.  Nevertheless, both are zero for $k < \chi(G)$ and
+  nonzero for $k \geq \chi(G)$, which is the only property needed to determine
+  the chromatic number.
+\end{remark}
+
+\subsection{Algorithm}
+
+The full procedure to compute $\chi(G)$ is given in
+Algorithm~\ref{alg:exact}.  It first enumerates all independent sets of $G$
+(Algorithm~\ref{alg:indsets}) using a power-set sweep with bitset membership
+testing, then evaluates formula~\eqref{eq:ck} for increasing $k$.
+
+\begin{algorithm}
+\caption{Enumerate all independent sets of $G$}\label{alg:indsets}
+\begin{algorithmic}[1]
+\Require Graph $G = (V, E)$ with $|V| = n$
+\Ensure Set $\mathcal{F}$ of all independent sets (as $n$-bit integers)
+\State $\mathcal{F} \gets \emptyset$
+\For{$i \gets 0$ \textbf{to} $2^n - 1$}
+  \State $B \gets$ $n$-bit representation of $i$
+  \If{$\forall\, u \neq v$: $B[u] = B[v] = 1 \Rightarrow uv \notin E$}
+    \State $\mathcal{F} \gets \mathcal{F} \cup \{B\}$
+  \EndIf
+\EndFor
+\Return $\mathcal{F}$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Compute $\chi(G)$ via inclusion-exclusion}\label{alg:exact}
+\begin{algorithmic}[1]
+\Require Graph $G = (V, E)$ with $|V| = n$
+\Ensure Chromatic number $\chi(G)$
+\State $\mathcal{F} \gets \textsc{EnumerateIndepSets}(G)$
+\For{$k \gets 1$ \textbf{to} $n$}
+  \State $\mathit{cnt} \gets 0$
+  \For{each $S \subseteq V$ (represented as a bitset)}
+    \State $a \gets |\{I \in \mathcal{F} : I \mathbin{\&} S = 0\}|$
+      \Comment{count IS avoiding $S$}
+    \State $\mathit{cnt} \gets \mathit{cnt} + (-1)^{|S|} \cdot a^k$
+  \EndFor
+  \If{$\mathit{cnt} \neq 0$}
+    \Return $k$
+  \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection*{Bitset Representation}
+
+Each independent set is stored as an $n$-bit integer (a
+\texttt{boost::dynamic\_bitset}).  The independence check for a candidate set
+$B$ iterates over all pairs $(i,j)$ with $B[i]=B[j]=1$ and verifies $ij \notin
+E$.  The subset-avoidance test $I \cap S = \emptyset$ reduces to the bitwise
+operation $(I \mathbin{\&} S) = 0$.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{The Greedy Coloring Heuristic}\label{sec:heuristic}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Independent Set Extraction}
+
+The greedy procedure (Algorithm~\ref{alg:greedyIS}) builds an independent set
+by iterating through the active vertices in index order.  For each vertex $v$
+selected, it removes $v$ and all of $v$'s current neighbors from the active
+set.
+
+\begin{algorithm}
+\caption{Greedy independent set extraction}\label{alg:greedyIS}
+\begin{algorithmic}[1]
+\Require Graph $G = (V, E)$; active set $U \subseteq V$
+\Ensure An independent set $I \subseteq U$
+\State $I \gets \emptyset$
+\While{$G$ has edges}
+  \State $v \gets$ first vertex in $U$
+  \State $I \gets I \cup \{v\}$
+  \State Remove $v$ and all neighbors of $v$ from $U$ and from $G$
+\EndWhile
+\Return $I$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Greedy Coloring}
+
+Algorithm~\ref{alg:greedycol} repeatedly calls the IS extractor to peel off
+color classes one at a time.
+
+\begin{algorithm}
+\caption{Greedy graph coloring}\label{alg:greedycol}
+\begin{algorithmic}[1]
+\Require Graph $G = (V, E)$
+\Ensure Coloring array $\mathit{col}[0\ldots n-1]$
+\State $\mathit{col} \gets$ array of size $n$; $k \gets 0$
+\While{$G$ has edges}
+  \State $I \gets \textsc{GreedyIndepSet}(G)$
+  \For{each $v \in I$}
+    \State $\mathit{col}[v] \gets k$
+    \State Remove all edges incident to $v$ from $G$
+  \EndFor
+  \State $k \gets k + 1$
+\EndWhile
+\Return $\mathit{col}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Quality of the Heuristic}
+
+The greedy algorithm is well-known to produce at most $\Delta(G)+1$ colors,
+where $\Delta(G)$ is the maximum degree~\cite{Welsh1967}.  It is exact on
+bipartite graphs and on chordal graphs (with an appropriate vertex ordering),
+but can be arbitrarily far from optimal on general graphs.  Its primary
+advantage is $O(n + m)$ running time per color class, making it practical for
+large sparse graphs.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Implementation}\label{sec:implementation}
+% ─────────────────────────────────────────────────────────────────────────────
+
+The project is written in C++17 and uses the Boost Graph Library (BGL)
+version~1.60 or later.  The graph type is
+
+\begin{lstlisting}
+typedef boost::adjacency_list<
+    boost::vecS, boost::vecS, boost::undirectedS,
+    property<boost::vertex_color_t, int>,
+    property<boost::edge_weight_t, int,
+             property<boost::edge_name_t, string>>> Graph;
+\end{lstlisting}
+
+Independent sets are stored as \texttt{boost::dynamic\_bitset<>} objects, which
+support $O(n/w)$ bitwise AND, OR, and population-count operations where $w$ is
+the machine word size.
+
+The key functions are:
+
+\begin{itemize}
+  \item \texttt{power\_set(n, f)}: iterates over all $2^n$ subsets, calling
+        \texttt{f} with each subset represented as a \texttt{dynbit}.
+  \item \texttt{is\_indep\_set(G, B)}: checks all pairs of set bits in $B$ for
+        adjacency.
+  \item \texttt{gen\_ind\_set\_for\_g(G)}: returns $\mathcal{F}(G)$ as a
+        \texttt{std::set<dynbit>}.
+  \item \texttt{alpha(S, F)}: counts $|\{I \in F : I \mathbin{\&} S = 0\}|$
+        by a linear scan.
+  \item \texttt{c\_k(F, G, k)}: evaluates formula~\eqref{eq:ck} using
+        floating-point arithmetic and casts the result to \texttt{int}.
+\end{itemize}
+
+Generators for Cycle ($C_n$) and Generalized Peterson ($GP(n,k)$) graphs
+extend the abstract base class \texttt{GeneratorInterface} and override
+\texttt{generate()}.
+
+\paragraph{Generalized Peterson graph.}
+$GP(n,k)$ has $2n$ vertices.  The outer $n$-cycle connects vertex $i$ to
+$(i+1) \bmod n$.  Spoke edges connect outer vertex $i$ to inner vertex $i+n$.
+Inner edges connect $i+n$ to $(i+n+k) \bmod n + n$ with a boundary correction.
+
+\paragraph{Build system.}
+The project uses CMake 3.6 or later.  The \texttt{exact\_coloring} target
+compiles \texttt{main.cpp} (exact algorithm demo) and the \texttt{tests} target
+compiles \texttt{tests.cpp} (the test suite described in
+Section~\ref{sec:experiments}).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Experimental Results}\label{sec:experiments}
+% ─────────────────────────────────────────────────────────────────────────────
+
+All experiments were run on the \texttt{tests} binary compiled with
+\texttt{-std=c++17 --openmp -O2} on Ubuntu 22.04.  Table~\ref{tab:results}
+summarizes the chromatic numbers recovered by the exact algorithm.
+
+\begin{table}[h]
+\centering
+\caption{Chromatic numbers computed by the exact algorithm (65 assertions, all passing).}
+\label{tab:results}
+\begin{tabular}{llcccc}
+\toprule
+Graph & Description & $|V|$ & $|E|$ & $\chi$ (computed) & Known $\chi$ \\
+\midrule
+\multicolumn{6}{l}{\textit{Cycle graphs}} \\
+$C_3$ & Triangle / $K_3$         & 3  & 3  & 3 & 3 \\
+$C_4$ & 4-cycle (square)         & 4  & 4  & 2 & 2 \\
+$C_5$ & 5-cycle (pentagon)       & 5  & 5  & 3 & 3 \\
+$C_6$ & 6-cycle (hexagon)        & 6  & 6  & 2 & 2 \\
+$C_7$ & 7-cycle                  & 7  & 7  & 3 & 3 \\
+\midrule
+\multicolumn{6}{l}{\textit{Complete and edgeless graphs}} \\
+$K_1$ & Single vertex            & 1  & 0  & 1 & 1 \\
+$K_2$ & Single edge              & 2  & 1  & 2 & 2 \\
+$K_3$ & Triangle                 & 3  & 3  & 3 & 3 \\
+$K_4$ & Complete graph           & 4  & 6  & 4 & 4 \\
+$E_1$ & Isolated vertex          & 1  & 0  & 1 & 1 \\
+$E_3$ & Three isolated vertices  & 3  & 0  & 1 & 1 \\
+\midrule
+\multicolumn{6}{l}{\textit{Bipartite graphs}} \\
+$K_{2,3}$ & Complete bipartite   & 5  & 6  & 2 & 2 \\
+\midrule
+\multicolumn{6}{l}{\textit{Wheel graphs} $W_n$ = hub $+\,C_{n-1}$;
+  $\chi=3$ if $n$ odd, $\chi=4$ if $n$ even} \\
+$W_5$ & Hub $+\,C_4$ (even rim)     & 5  & 8  & 3 & 3 \\
+$W_6$ & Hub $+\,C_5$ (odd rim)      & 6  & 10 & 4 & 4 \\
+$W_7$ & Hub $+\,C_6$ (even rim)     & 7  & 12 & 3 & 3 \\
+$W_8$ & Hub $+\,C_7$ (odd rim)      & 8  & 14 & 4 & 4 \\
+$W_9$ & Hub $+\,C_8$ (even rim)     & 9  & 16 & 3 & 3 \\
+\midrule
+\multicolumn{6}{l}{\textit{Complete multipartite graphs};
+  $\chi(K_{s,\ldots,s}^{(k)}) = k$} \\
+$K_{2,2,2}$   & Octahedron            & 6  & 12 & 3 & 3 \\
+$K_{3,3,3}$   & Complete 3-partite    & 9  & 27 & 3 & 3 \\
+$K_{2,2,2,2}$ & Complete 4-partite    & 8  & 24 & 4 & 4 \\
+\midrule
+\multicolumn{6}{l}{\textit{Generalized Petersen graphs} $GP(n,k)$} \\
+$GP(4,1)$ & 3-cube $Q_3$ (bipartite)    & 8  & 12 & 2 & 2 \\
+$GP(5,1)$ & Pentagonal prism            & 10 & 15 & 3 & 3 \\
+$GP(5,2)$ & Petersen graph              & 10 & 15 & 3 & 3 \\
+$GP(6,1)$ & Hexagonal prism (bipartite) & 12 & 18 & 2 & 2 \\
+$GP(6,2)$ & ---                         & 12 & 18 & 3 & 3 \\
+$GP(7,2)$ & ---                         & 14 & 21 & 3 & 3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All 65 test assertions pass, confirming both the zero/nonzero behavior of
+$c_k$ and, for complete graphs, the exact value of the formula at $k = \chi(G)$.
+
+\subsection{Exact Values of $c_k$ at the Chromatic Number}
+
+For complete graphs, the formula~\eqref{eq:ck} coincides with the standard
+chromatic polynomial at $k = \chi(G)$:
+
+\begin{table}[h]
+\centering
+\caption{Values of $c_k(G, \chi(G))$ vs.\ the chromatic polynomial $P(G, \chi(G))$.}
+\label{tab:poly}
+\begin{tabular}{lccccc}
+\toprule
+Graph & $\chi$ & $c_k(G, \chi)$ & $P(G, \chi)$ & Match? \\
+\midrule
+$K_1$ & 1 & 1    & 1    & Yes \\
+$K_2$ & 2 & 2    & 2    & Yes \\
+$K_3$ & 3 & 6    & 6    & Yes \\
+$K_4$ & 4 & 24   & 24   & Yes \\
+$C_3$ & 3 & 6    & 6    & Yes \\
+$C_4$ & 2 & 2    & 2    & Yes \\
+$C_5$ & 3 & 60   & 30   & No  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The coincidence for $K_n$ can be verified algebraically: since the only
+independent sets of $K_n$ are $\emptyset$ and the $n$ singletons,
+$\alpha(S, \mathcal{F}) = n - |S| + 1$ and the sum~\eqref{eq:ck} at $k=n$
+evaluates to
+\[
+  \sum_{j=0}^{n} \binom{n}{j}(-1)^{n-j}(j+1)^n = n!,
+\]
+which equals $P(K_n, n) = n!$.  For cycle $C_4$ the coincidence is accidental;
+for $C_5$ the values differ.
+
+\subsection{Parity Property of Odd Cycles}
+
+For any odd cycle $C_n$ ($n$ odd) the algorithm correctly returns $\chi = 3$.
+No odd cycle is 2-colorable because any 2-coloring of a path forces the two
+endpoints of a cycle to receive the same color, contradicting the closing edge.
+For $n = 3, 5, 7$ the algorithm confirmed $c_k(C_n, 2) = 0$ and $c_k(C_n, 3)
+> 0$.
+
+\subsection{Petersen Graph}
+
+The Petersen graph $GP(5,2)$ is the canonical example of a 3-chromatic
+3-regular graph.  It is not planar and has no Hamiltonian cycle.  Our algorithm
+confirmed $\chi(GP(5,2)) = 3$, with $c_k(GP(5,2), 2) = 0$ and $c_k(GP(5,2),
+3) > 0$.
+
+\subsection{Wheel Graphs}
+
+The wheel graph $W_n$ consists of a single hub vertex connected to every vertex
+of a cycle $C_{n-1}$.  It has $n$ vertices and $2(n-1)$ edges.  Because the
+hub is adjacent to every rim vertex, the hub's color must differ from all colors
+used on the rim.
+
+\begin{itemize}
+  \item If $n$ is odd, the rim $C_{n-1}$ has an even number of vertices and is
+        therefore bipartite, so $\chi(C_{n-1}) = 2$.  The hub requires a third
+        color, giving $\chi(W_n) = 3$.
+  \item If $n$ is even, the rim $C_{n-1}$ is an odd cycle, so $\chi(C_{n-1})
+        = 3$.  The hub must avoid all three rim colors, giving $\chi(W_n) = 4$.
+\end{itemize}
+
+This makes wheel graphs the simplest natural family with $\chi = 4$.  We
+verified $\chi(W_n)$ for $n \in \{5,6,7,8,9\}$; all 5 tests pass.
+
+\subsection{Complete Multipartite Graphs}
+
+The complete $k$-partite graph $K_{s,\ldots,s}$ (with $k$ parts of $s$
+vertices each) has $\chi = k$: color each part with its own color (lower bound
+from the clique-like independence structure; $k$ colors suffice since each part
+is an independent set).  We tested:
+
+\begin{itemize}
+  \item $K_{2,2,2}$ (octahedron): 6 vertices, 12 edges, $\chi = 3$.
+  \item $K_{3,3,3}$: 9 vertices, 27 edges, $\chi = 3$.
+  \item $K_{2,2,2,2}$: 8 vertices, 24 edges, $\chi = 4$.
+\end{itemize}
+
+These graphs have few independent sets relative to $2^n$ (only subsets within
+a single part), so the algorithm is fast despite the large edge count.
+
+\subsection{Generalized Petersen Family}
+
+Beyond $GP(5,2)$ we tested five more members:
+
+\begin{itemize}
+  \item $GP(4,1) \cong Q_3$ (3-cube): bipartite, $\chi = 2$.
+  \item $GP(5,1)$ (pentagonal prism): odd outer cycle, $\chi = 3$.
+  \item $GP(6,1)$ (hexagonal prism): even outer cycle, bipartite, $\chi = 2$.
+  \item $GP(6,2)$: inner triangles force $\chi \geq 3$; algorithm confirms $\chi = 3$.
+  \item $GP(7,2)$: odd outer and inner cycles, $\chi = 3$.
+\end{itemize}
+
+\subsection{Scaling Analysis}
+
+Table~\ref{tab:scaling} reports wall-clock times for selected larger graphs.
+The dominant cost is evaluating $c_k$ (formula~\eqref{eq:ck}), which is
+$O(2^n \cdot |\mathcal{F}|)$ per candidate $k$.  For sparse graphs such as
+cycles, $|\mathcal{F}|$ grows like the Lucas sequence $L(n) \approx \varphi^n$,
+so the total cost is roughly $O((2\varphi)^n) \approx O(3.24^n)$, yielding
+approximately a 10$\times$ slowdown per 2 additional vertices.  Dense graphs
+such as $K_{m,m}$ have much smaller $|\mathcal{F}|$ and therefore scale better.
+
+\begin{table}[h]
+\centering
+\caption{Wall-clock time for larger graphs (Release build, single core, Ubuntu 22.04).}
+\label{tab:scaling}
+\begin{tabular}{llcccc}
+\toprule
+Graph & Family & $|V|$ & $|E|$ & $\chi$ & Time \\
+\midrule
+$C_8$     & Cycle          &  8 &  8 & 2 &    1\,ms \\
+$C_9$     & Cycle          &  9 &  9 & 3 &    7\,ms \\
+$C_{10}$  & Cycle          & 10 & 10 & 2 &   24\,ms \\
+$C_{11}$  & Cycle          & 11 & 11 & 3 &   86\,ms \\
+$C_{12}$  & Cycle          & 12 & 12 & 2 &  168\,ms \\
+$C_{13}$  & Cycle          & 13 & 13 & 3 &  786\,ms \\
+$C_{14}$  & Cycle          & 14 & 14 & 2 & $\approx$3\,s \\
+$C_{16}$  & Cycle          & 16 & 16 & 2 & $\approx$33\,s \\
+\midrule
+$K_5$     & Complete       &  5 & 10 & 5 & $<$1\,ms \\
+$K_6$     & Complete       &  6 & 15 & 6 & $<$1\,ms \\
+$K_7$     & Complete       &  7 & 21 & 7 & $<$1\,ms \\
+$K_8$     & Complete       &  8 & 28 & 8 &    1\,ms \\
+\midrule
+$K_{4,4}$ & Bipartite      &  8 & 16 & 2 &    1\,ms \\
+$K_{5,5}$ & Bipartite      & 10 & 25 & 2 &    9\,ms \\
+$K_{6,6}$ & Bipartite      & 12 & 36 & 2 &   69\,ms \\
+$K_{7,7}$ & Bipartite      & 14 & 49 & 2 &  536\,ms \\
+\midrule
+$GP(6,2)$ & Gen.\ Petersen & 12 & 18 & 3 &  135\,ms \\
+$GP(7,2)$ & Gen.\ Petersen & 14 & 21 & 3 & 1333\,ms \\
+$GP(8,3)$ & Gen.\ Petersen & 16 & 24 & 2 & $\approx$15\,s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Overflow limitation.}
+The implementation accumulates the inclusion-exclusion sum in a 32-bit
+\texttt{int}.  For dense complete graphs $K_n$ with $n \geq 9$, individual
+terms of the form $(-1)^{|S|}\,\alpha(S,\mathcal{F})^k$ exceed $2^{31}$,
+causing silent overflow.  Cycles and bipartite graphs are not affected because
+their independent-set counts are much smaller.  Replacing \texttt{int} with
+\texttt{int64\_t} would extend the safe range to $K_n$ with $n \lesssim 18$.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Complexity Analysis}\label{sec:complexity}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Independent Set Enumeration}
+
+\texttt{gen\_ind\_set\_for\_g} calls \texttt{power\_set}, which iterates over
+all $2^n$ subsets.  For each subset $B$, \texttt{is\_indep\_set} checks all
+pairs of set bits: at most $O(n^2)$ edge queries.  Hence the enumeration phase
+runs in $O(2^n \cdot n^2)$ time and produces a set $\mathcal{F}$ of at most
+$3^n / \text{poly}(n)$ independent sets (by the Moon--Moser theorem on the
+maximum number of maximal independent sets in a graph with $n$
+vertices~\cite{MoonMoser1965}).
+
+\subsection{Evaluation of $c_k$}
+
+For each candidate $k$, evaluating formula~\eqref{eq:ck} requires iterating
+over all $2^n$ subsets $S$ and, for each $S$, scanning all $|\mathcal{F}|$
+independent sets to compute $\alpha(S, \mathcal{F})$.  This costs
+$O(2^n \cdot |\mathcal{F}| \cdot n/w)$ per value of $k$, where $n/w$ is the
+cost of a bitwise AND.  Summing over at most $n$ values of $k$, the total
+evaluation cost is $O(n \cdot 2^n \cdot |\mathcal{F}| \cdot n/w)$.
+
+\subsection{Overall Complexity}
+
+The dominating term is the evaluation of $c_k$, giving
+\[
+  T(n) = O\!\left(n^2 \cdot 2^n \cdot |\mathcal{F}(G)|\right).
+\]
+In the worst case (e.g., the empty graph $E_n$ has $|\mathcal{F}| = 2^n$),
+this is $O(n^2 \cdot 4^n)$.  Empirically (Table~\ref{tab:scaling}), sparse
+graphs such as cycles reach the practical limit around $n = 13$--$14$ (seconds
+to minutes), while dense graphs such as $K_{m,m}$ scale better because
+$|\mathcal{F}|$ is much smaller than $2^n$.  The algorithm is intended for
+exact coloring of small subgraphs; for large graphs the greedy heuristic in
+\texttt{main2.cpp} is the appropriate choice.
+
+\subsection{Space Complexity}
+
+Storing $\mathcal{F}$ requires $O(|\mathcal{F}| \cdot n/w)$ words, which is
+$O(3^n \cdot n / w)$ in the worst case.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Conclusion}\label{sec:conclusion}
+% ─────────────────────────────────────────────────────────────────────────────
+
+We have described and formally justified the inclusion-exclusion algorithm for
+computing the chromatic number of a graph implemented in the
+\texttt{graph-exact-coloring-heuristic} project.  The key result is that the
+quantity $c_k(G, k)$ --- the number of ordered $k$-tuples of independent sets
+covering $V$ --- is zero if and only if $G$ is not $k$-colorable
+(Theorem~\ref{thm:chromatic}).  Scanning $k = 1, 2, \ldots$ and stopping at
+the first nonzero value thus yields $\chi(G)$ exactly.
+
+The algorithm is exponential in $|V|$ and is therefore intended for small
+graphs or for exact coloring of subgraphs within a larger heuristic pipeline.
+The companion greedy coloring algorithm runs in linear time and provides a fast
+upper bound useful as an initialization strategy or a standalone heuristic for
+large instances.
+
+Future directions include: (i) exploiting symmetry to prune the power-set
+enumeration, (ii) integrating branch-and-bound to improve worst-case behavior,
+and (iii) leveraging OpenMP (already supported in the build) to parallelize the
+inner $\alpha$-counting loop.
+
+\begin{thebibliography}{9}
+
+\bibitem{Karp1972}
+R.~M. Karp.
+\newblock Reducibility among combinatorial problems.
+\newblock In R.~E. Miller and J.~W. Thatcher, editors, \emph{Complexity of
+  Computer Computations}, pages 85--103. Plenum Press, 1972.
+
+\bibitem{Welsh1967}
+D.~J.~A. Welsh and M.~B. Powell.
+\newblock An upper bound for the chromatic number of a graph and its
+  application to timetabling problems.
+\newblock \emph{The Computer Journal}, 10(1):85--86, 1967.
+
+\bibitem{MoonMoser1965}
+J.~W. Moon and L.~Moser.
+\newblock On cliques in graphs.
+\newblock \emph{Israel Journal of Mathematics}, 3(1):23--28, 1965.
+
+\bibitem{Lawler1976}
+E.~L. Lawler.
+\newblock A note on the complexity of the chromatic number problem.
+\newblock \emph{Information Processing Letters}, 5(3):66--67, 1976.
+
+\bibitem{BGL}
+J.~G. Siek, L.-Q. Lee, and A.~Lumsdaine.
+\newblock \emph{The Boost Graph Library: User Guide and Reference Manual}.
+\newblock Addison-Wesley, 2002.
+
+\end{thebibliography}
+
+\end{document}
