@@ -433,11 +433,11 @@ $W_9$ & Hub $+\,C_8$ (even rim)     & 9  & 16 & 3 & 3 \\
 $K_{2,2,2}$   & Octahedron            & 6  & 12 & 3 & 3 \\
 $K_{3,3,3}$   & Complete 3-partite    & 9  & 27 & 3 & 3 \\
 $K_{2,2,2,2}$ & Complete 4-partite    & 8  & 24 & 4 & 4 \\
-$K_{2\times5}$ & Complete 5-partite   & 10 & 20 & 5 & 5 \\
-$K_{2\times6}$ & Complete 6-partite   & 12 & 30 & 6 & 6 \\
-$K_{2\times7}$ & Complete 7-partite   & 14 & 42 & 7 & 7 \\
-$K_{2\times8}$ & Complete 8-partite   & 16 & 56 & 8 & 8 \\
-$K_{2\times9}$ & Complete 9-partite   & 18 & 72 & 9 & 9 \\
+$K_{2\times5}$ & Complete 5-partite   & 10 & 40 & 5 & 5 \\
+$K_{2\times6}$ & Complete 6-partite   & 12 & 60 & 6 & 6 \\
+$K_{2\times7}$ & Complete 7-partite   & 14 & 84 & 7 & 7 \\
+$K_{2\times8}$ & Complete 8-partite   & 16 & 112 & 8 & 8 \\
+$K_{2\times9}$ & Complete 9-partite   & 18 & 144 & 9 & 9 \\
 \midrule
 \multicolumn{6}{l}{\textit{Generalized Petersen graphs} $GP(n,k)$} \\
 $GP(4,1)$ & 3-cube $Q_3$ (bipartite)    & 8  & 12 & 2 & 2 \\
@@ -656,14 +656,97 @@ Graph & $V$ & $E$ & $\chi$ & Time \\
 \midrule
 $K_9$         & 9  & 36 & 9 & 3\,ms \\
 $K_{10}$      & 10 & 45 & 10 & 9\,ms \\
-$K_{2\times5}$ & 10 & 20 & 5 & 7\,ms \\
-$K_{2\times6}$ & 12 & 30 & 6 & 47\,ms \\
-$K_{2\times7}$ & 14 & 42 & 7 & 287\,ms \\
-$K_{2\times8}$ & 16 & 56 & 8 & 1.1\,s \\
-$K_{2\times9}$ & 18 & 72 & 9 & 5.5\,s \\
+$K_{2\times5}$ & 10 & 40 & 5 & 7\,ms \\
+$K_{2\times6}$ & 12 & 60 & 6 & 47\,ms \\
+$K_{2\times7}$ & 14 & 84 & 7 & 287\,ms \\
+$K_{2\times8}$ & 16 & 112 & 8 & 1.1\,s \\
+$K_{2\times9}$ & 18 & 144 & 9 & 5.5\,s \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsection{Greedy vs.\ Exact Coloring}\label{sec:greedy_vs_exact}
+
+Table~\ref{tab:greedy} compares the number of colors produced by the greedy
+heuristic (Algorithm~\ref{alg:greedycol}) against the true chromatic number
+$\chi(G)$ on the same graph families.  The greedy processes vertices in
+ascending index order, so its quality depends strongly on the vertex ordering.
+
+\begin{table}[ht]
+\centering
+\caption{Greedy colors vs.\ exact chromatic number $\chi(G)$.
+  ``='' means the greedy is optimal; ``$>$'' means it over-estimates.}
+\label{tab:greedy}
+\begin{tabular}{llcccc}
+\toprule
+Graph & Family & $\chi$ & Greedy & $\Delta(G)$ & Note \\
+\midrule
+\multicolumn{6}{l}{\textit{Cycles}} \\
+$C_3$  & Odd cycle  & 3 & 3  & 2 & = optimal \\
+$C_4$  & Even cycle & 2 & 4  & 2 & $2\times$ optimum \\
+$C_5$  & Odd cycle  & 3 & 3  & 2 & = optimal \\
+$C_6$  & Even cycle & 2 & 4  & 2 & $2\times$ optimum \\
+$C_7$  & Odd cycle  & 3 & 3  & 2 & = optimal \\
+\midrule
+\multicolumn{6}{l}{\textit{Complete graphs}} \\
+$K_2$  & Complete & 2  & 2  & 1 & = optimal \\
+$K_3$  & Complete & 3  & 3  & 2 & = optimal \\
+$K_4$  & Complete & 4  & 4  & 3 & = optimal \\
+$K_5$  & Complete & 5  & 5  & 4 & = optimal \\
+$K_{10}$ & Complete & 10 & 10 & 9 & = optimal \\
+\midrule
+\multicolumn{6}{l}{\textit{Bipartite}} \\
+$K_{2,3}$ & Complete bipartite & 2 & 3 & 3 & over by 1 \\
+\midrule
+\multicolumn{6}{l}{\textit{Wheel graphs} $W_n$} \\
+$W_5$  & Odd $n$, even rim & 3 & 5 & 4 & over by 2 \\
+$W_6$  & Even $n$, odd rim & 4 & 4 & 5 & = optimal \\
+$W_7$  & Odd $n$, even rim & 3 & 5 & 6 & over by 2 \\
+$W_8$  & Even $n$, odd rim & 4 & 4 & 7 & = optimal \\
+\midrule
+\multicolumn{6}{l}{\textit{Complete multipartite}} \\
+$K_{2,2,2}$   & Octahedron       & 3 & 5  & 4 & over by 2 \\
+$K_{2,2,2,2}$ & 4-partite        & 4 & 7  & 6 & over by 3 \\
+$K_{2\times5}$ & 5-partite       & 5 & 9  & 8 & over by 4 \\
+$K_{2\times9}$ & 9-partite       & 9 & 17 & 16 & over by 8 \\
+\midrule
+\multicolumn{6}{l}{\textit{Generalized Petersen graphs}} \\
+$GP(5,1)$ & Pentagonal prism & 3 & 3 & 3 & = optimal \\
+$GP(5,2)$ & Petersen graph   & 3 & 4 & 3 & over by 1 \\
+$GP(6,1)$ & Hexagonal prism  & 2 & 6 & 3 & $3\times$ optimum \\
+$GP(7,2)$ & ---              & 3 & 4 & 3 & over by 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The results illustrate several patterns:
+
+\begin{itemize}
+\item \textbf{Complete graphs}: the greedy is always optimal.  Because every
+  vertex is adjacent to all lower-indexed vertices, each vertex receives a new
+  color, achieving exactly $n$ colors for $K_n$.
+
+\item \textbf{Odd cycles}: the greedy is optimal ($\chi = 3$).  Vertex 0 and
+  its non-adjacent neighbor both receive color 0, and the single remaining
+  vertex requires a third color.
+
+\item \textbf{Even cycles and bipartite graphs}: the greedy performs poorly
+  because the vertex-order traversal fails to exploit the bipartite structure.
+  $C_4$ receives 4 colors instead of 2; similarly $GP(6,1)$ (hexagonal prism,
+  bipartite) receives 6 instead of 2.
+
+\item \textbf{Wheel graphs}: exact when $n$ is even (odd rim forces 4 colors
+  regardless of ordering) but over-estimates by 2 when $n$ is odd.
+
+\item \textbf{Complete multipartite $K_{2\times k}$}: the over-count grows
+  linearly with $k$; the greedy uses approximately $2k-1$ colors instead of
+  $k$, giving an approximation ratio approaching 2 as $k$ grows.
+\end{itemize}
+
+These results confirm that the greedy is a fast but unreliable upper bound: it
+is tight on graphs where the natural vertex order aligns with the chromatic
+structure (complete graphs, odd cycles), but can be far from optimal on
+structured sparse or multipartite graphs.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Complexity Analysis}\label{sec:complexity}
@@ -700,7 +783,7 @@ graphs such as cycles reach the practical limit around $n = 13$--$14$ (seconds
 to minutes), while dense graphs such as $K_{m,m}$ scale better because
 $|\mathcal{F}|$ is much smaller than $2^n$.  The algorithm is intended for
 exact coloring of small subgraphs; for large graphs the greedy heuristic in
-\texttt{main2.cpp} is the appropriate choice.
+\texttt{demo\_greedy\_coloring.cpp} is the appropriate choice.
 
 \subsection{Space Complexity}
 

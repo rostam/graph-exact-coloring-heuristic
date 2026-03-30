@@ -89,7 +89,7 @@ Timing was measured on a single core (Release build, Ubuntu 22.04).
 | GP(6,1) | Hexagonal prism (bipartite) | 12 | 18 | 2 |
 | GP(6,2) | — | 12 | 18 | 3 |
 | GP(7,2) | — | 14 | 21 | 3 |
-| **K_{2×5} – K_{2×9}** | **Complete k-partite (2 per part)** | **10–18** | **20–72** | **5–9** |
+| **K_{2×5} – K_{2×9}** | **Complete k-partite (2 per part)** | **10–18** | **40–144** | **5–9** |
 
 ### SuiteSparse Matrix Collection
 
@@ -142,11 +142,11 @@ Dense graphs scale better because |F| is much smaller.
 |---|:-:|:-:|:-:|--:|
 | K₉ | 9 | 36 | 9 | 3 ms |
 | K₁₀ | 10 | 45 | 10 | 9 ms |
-| K_{2×5} | 10 | 20 | 5 | 7 ms |
-| K_{2×6} | 12 | 30 | 6 | 47 ms |
-| K_{2×7} | 14 | 42 | 7 | 287 ms |
-| K_{2×8} | 16 | 56 | 8 | 1.1 s |
-| K_{2×9} | 18 | 72 | 9 | 5.5 s |
+| K_{2×5} | 10 | 40 | 5 | 7 ms |
+| K_{2×6} | 12 | 60 | 6 | 47 ms |
+| K_{2×7} | 14 | 84 | 7 | 287 ms |
+| K_{2×8} | 16 | 112 | 8 | 1.1 s |
+| K_{2×9} | 18 | 144 | 9 | 5.5 s |
 
 ## Project Structure
 
