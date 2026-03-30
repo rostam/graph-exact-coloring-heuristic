@@ -29,8 +29,8 @@
   frame=single
 }
 
-\title{\textbf{A Chromatic Number Algorithm via\\
-Inclusion-Exclusion over Independent Sets}}
+\title{\textbf{Two Graph Coloring Algorithms Based on Independent Sets:\\
+IS-Based Exact Coloring and IS-Removal Coloring}}
 
 \author{Graph Exact Coloring Heuristic Project}
 \date{\today}
@@ -40,22 +40,23 @@ Inclusion-Exclusion over Independent Sets}}
 \maketitle
 
 \begin{abstract}
-We describe and analyze an algorithm that determines the chromatic number of a
-graph by evaluating a combinatorial quantity derived from inclusion-exclusion
-over the collection of all independent sets.  The quantity, denoted $c_k(G)$,
-counts the number of ordered $k$-tuples of independent sets of $G$ whose union
-is $V(G)$.  We prove that $c_k(G) = 0$ if and only if $k < \chi(G)$, so the
-chromatic number equals the smallest $k$ for which $c_k(G) \neq 0$.  We also
-describe a companion IS-removal coloring algorithm that computes an upper bound on
-$\chi(G)$.  Both algorithms are implemented in C++17 using the Boost Graph
-Library.  We present experimental results on cycles $C_n$, complete graphs $K_n$,
-the Petersen graph $GP(5,2)$ and other generalized Petersen graphs, wheel
-graphs $W_n$, complete multipartite graphs $K_{s,\ldots,s}$, edgeless graphs,
-and graphs derived from matrices in the SuiteSparse Matrix Collection
-(DNA electrophoresis, graph drawing, and FEM problems), confirming that the
-exact algorithm recovers the known chromatic numbers for all tested cases.
-We also report empirical scaling data showing that the algorithm is practical
-for graphs up to roughly 13--14 vertices on a single core.
+We describe and analyze two graph coloring algorithms both rooted in the
+independent-set structure of a graph.  The first, \emph{IS-based exact
+coloring}, determines the chromatic number exactly by evaluating a
+combinatorial quantity derived from inclusion-exclusion over all independent
+sets.  The quantity, denoted $c_k(G)$, satisfies $c_k(G) = 0$ if and only if
+$k < \chi(G)$, so the chromatic number equals the smallest $k$ for which
+$c_k(G) \neq 0$.  The second, \emph{IS-removal coloring}, repeatedly peels
+off one independent set per round and assigns it the next available color,
+yielding a fast upper bound on $\chi(G)$.  Both algorithms are implemented in
+C++17 using the Boost Graph Library.  We present experimental results on
+cycles $C_n$, complete graphs $K_n$, the Petersen graph $GP(5,2)$ and other
+generalized Petersen graphs, wheel graphs $W_n$, complete multipartite graphs
+$K_{s,\ldots,s}$, edgeless graphs, and graphs from the SuiteSparse Matrix
+Collection, reporting both the exact chromatic number and the IS-removal
+upper bound side by side.  The exact algorithm is practical for graphs up to
+roughly 13--14 vertices on a single core; IS-removal runs in $O(n \cdot m)$
+and is applicable to larger instances.
 \end{abstract}
 
 \tableofcontents
@@ -73,9 +74,10 @@ $\chi(G)$.  Determining $\chi(G)$ is NP-hard in general~\cite{Karp1972}, yet
 exact algorithms are essential for small or sparse graphs arising in scientific
 computing, scheduling, and register allocation.
 
-This paper documents the algorithm implemented in the
-\texttt{graph-exact-coloring-heuristic} project.  The core function
-\texttt{c\_k} evaluates the inclusion-exclusion sum
+This paper documents two algorithms implemented in the
+\texttt{graph-exact-coloring-heuristic} project.
+The first, \emph{IS-based exact coloring}, uses the core function
+\texttt{c\_k} which evaluates the inclusion-exclusion sum
 \[
   c_k(G,k) \;=\; \sum_{S \subseteq V} (-1)^{|S|}\,
                   \bigl|\{\,I \in \mathcal{F}(G) : I \cap S = \emptyset\,\}\bigr|^k,
@@ -85,8 +87,8 @@ the empty set).  We show that this quantity is zero precisely when $G$ is not
 $k$-colorable, and hence one can binary-search (or linearly scan) over $k$ to
 find $\chi(G)$.
 
-The companion IS-removal coloring algorithm, implemented in
-\texttt{demo\_is\_removal\_coloring.cpp}, repeatedly extracts an independent set
+The second, \emph{IS-removal coloring} (implemented in
+\texttt{demo\_is\_removal\_coloring.cpp}), repeatedly extracts an independent set
 and assigns it the next available color, yielding an upper bound that may
 exceed $\chi(G)$ in general.
 
@@ -379,9 +381,12 @@ $(i+1) \bmod n$.  Spoke edges connect outer vertex $i$ to inner vertex $i+n$.
 Inner edges connect $i+n$ to $(i+n+k) \bmod n + n$ with a boundary correction.
 
 \paragraph{Build system.}
-The project uses CMake 3.6 or later.  The \texttt{exact\_coloring} target
-compiles \texttt{main.cpp} (exact algorithm demo) and the \texttt{tests} target
-compiles \texttt{tests.cpp} (the test suite described in
+The project uses CMake 3.10 or later.  Three targets are built:
+\texttt{is\_exact\_coloring} (IS-based exact coloring demo,
+\texttt{demo\_is\_exact\_coloring.cpp}),
+\texttt{is\_removal\_coloring} (IS-removal demo,
+\texttt{demo\_is\_removal\_coloring.cpp}), and \texttt{tests}
+(\texttt{tests.cpp}, the test suite described in
 Section~\ref{sec:experiments}).
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -390,7 +395,7 @@ Section~\ref{sec:experiments}).
 
 All experiments were run on the \texttt{tests} binary compiled with
 \texttt{-std=c++17 --openmp -O2} on Ubuntu 22.04.  Table~\ref{tab:results}
-summarizes the chromatic numbers recovered by the exact algorithm.
+summarizes results for both the IS-based exact coloring and IS-removal coloring algorithms.
 
 \begin{table}[ht]
 \centering
@@ -564,7 +569,7 @@ vertices via BFS from a fixed starting vertex.
 \begin{table}[h]
 \centering
 \caption{Results on graphs derived from SuiteSparse matrices.
-  IS = IS-removal colors; Time = exact algorithm wall-clock time.}
+  IS = IS-removal colors; Time = IS-based exact coloring wall-clock time.}
 \label{tab:suitesparse}
 \begin{tabular}{lllcccccc}
 \toprule
@@ -652,7 +657,7 @@ algorithm scales well despite the large chromatic number.
 \begin{table}[h]
 \centering
 \caption{High chromatic number graphs (Release build, single core).
-  IS = IS-removal colors; Time = exact algorithm wall-clock time.}
+  IS = IS-removal colors; Time = IS-based exact coloring wall-clock time.}
 \label{tab:highchi}
 \begin{tabular}{lccccc}
 \toprule
@@ -738,8 +743,8 @@ this is $O(n^2 \cdot 4^n)$.  Empirically (Table~\ref{tab:scaling}), sparse
 graphs such as cycles reach the practical limit around $n = 13$--$14$ (seconds
 to minutes), while dense graphs such as $K_{m,m}$ scale better because
 $|\mathcal{F}|$ is much smaller than $2^n$.  The algorithm is intended for
-exact coloring of small subgraphs; for large graphs the IS-removal coloring in
-\texttt{demo\_is\_removal\_coloring.cpp} is the appropriate choice.
+IS-based exact coloring of small subgraphs; for large graphs the IS-removal
+coloring in \texttt{demo\_is\_removal\_coloring.cpp} is the appropriate choice.
 
 \subsection{Space Complexity}
 
@@ -759,7 +764,7 @@ covering $V$ --- is zero if and only if $G$ is not $k$-colorable
 the first nonzero value thus yields $\chi(G)$ exactly.
 
 The algorithm is exponential in $|V|$ and is therefore intended for small
-graphs or for exact coloring of subgraphs within a larger heuristic pipeline.
+graphs or for IS-based exact coloring of subgraphs within a larger pipeline.
 The companion IS-removal coloring algorithm runs in $O(n + m)$ time per color
 class and provides a fast upper bound useful as an initialization strategy or a
 standalone approximation for large instances.

@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
-project(exact_coloring CXX)
+project(is_exact_coloring CXX)
 
 find_package(Boost REQUIRED)
 find_package(OpenMP)
 
-add_executable(exact_coloring demo_exact_coloring.cpp)
-target_compile_features(exact_coloring PRIVATE cxx_std_17)
-target_include_directories(exact_coloring PRIVATE ${Boost_INCLUDE_DIRS})
+add_executable(is_exact_coloring demo_is_exact_coloring.cpp)
+target_compile_features(is_exact_coloring PRIVATE cxx_std_17)
+target_include_directories(is_exact_coloring PRIVATE ${Boost_INCLUDE_DIRS})
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(exact_coloring OpenMP::OpenMP_CXX)
+    target_link_libraries(is_exact_coloring OpenMP::OpenMP_CXX)
 endif()
 
 add_executable(is_removal_coloring demo_is_removal_coloring.cpp)

@@ -1,8 +1,13 @@
-# Graph Exact Coloring Heuristic
+# Graph Coloring via Independent Sets
 
-A C++17 library that computes the **chromatic number** of a graph via the chromatic polynomial, using inclusion-exclusion over all independent sets. A IS-removal coloring variant (`demo_is_removal_coloring.cpp`) is also provided.
+Two graph coloring algorithms implemented in C++17:
 
-## Algorithm
+- **IS-based exact coloring** — computes the exact chromatic number via inclusion-exclusion over all independent sets (`is_exact_coloring/is_exact_coloring.h`)
+- **IS-removal coloring** — a fast upper-bound heuristic that repeatedly peels off independent sets (`demo_is_removal_coloring.cpp`)
+
+## Algorithms
+
+### IS-Based Exact Coloring
 
 The chromatic polynomial value at `k` is computed as:
 
@@ -12,7 +17,11 @@ c_k(G) = Σ_{V ⊆ V(G)} (-1)^|V| · α(V, F)^k
 
 where `F` is the collection of all independent sets of `G` and `α(V, F)` counts the independent sets disjoint from `V`. The chromatic number χ(G) is the smallest `k` for which `c_k(G) ≠ 0`.
 
-> **Note:** This is an exact but exponential-time algorithm; it is suitable for small graphs only.
+> **Note:** Exact but exponential-time — suitable for small graphs (up to ~14 vertices).
+
+### IS-Removal Coloring
+
+Repeatedly extracts an independent set (by iterating vertices in index order and removing each selected vertex and its neighbours), assigns it the next color, and repeats until no edges remain. Runs in O(n·m) time but may over-estimate χ(G).
 
 ## Dependencies
 
@@ -31,17 +40,17 @@ make
 
 Produces two executables:
 
-| Binary            | Source                     | Description                                    |
-|-------------------|----------------------------|------------------------------------------------|
-| `exact_coloring`  | `demo_exact_coloring.cpp`  | Finds chromatic number of GP(5,2) and C_3–C_6  |
-| `is_removal_coloring` | `demo_is_removal_coloring.cpp` | Independent set removal coloring demo  |
-| `tests`           | `tests.cpp`                | Runs the test suite and prints pass/fail counts |
+| Binary               | Source                        | Description                                      |
+|----------------------|-------------------------------|--------------------------------------------------|
+| `is_exact_coloring`  | `demo_is_exact_coloring.cpp`  | IS-based exact chromatic number for all graph families |
+| `is_removal_coloring`| `demo_is_removal_coloring.cpp`| IS-removal coloring demo                         |
+| `tests`              | `tests.cpp`                   | Runs the test suite and prints pass/fail counts  |
 
 ## Usage
 
 ```bash
-# Chromatic numbers of the Petersen graph and cycle graphs
-./exact_coloring
+# IS-based exact chromatic numbers for all graph families
+./is_exact_coloring
 
 # IS-removal coloring demo
 ./is_removal_coloring
@@ -50,14 +59,18 @@ Produces two executables:
 ./tests
 ```
 
-Expected output from `./exact_coloring`:
+Expected output from `./is_exact_coloring` (excerpt):
 
 ```
-GP(5,2): 10 vertices
-Chromatic number of GP(5,2): 3
-C_3: 3 vertices
-Chromatic number of C_3: 3
-...
+=== IS-Based Exact Coloring: chromatic numbers ===
+
+Cycle graphs:
+  C_3  (V=3, E=3)  chi=3
+  C_4  (V=4, E=4)  chi=2
+  ...
+Generalized Petersen graphs:
+  GP(5,2)  (V=10, E=15)  chi=3
+  ...
 ```
 
 ## Results
@@ -153,14 +166,14 @@ Dense graphs scale better because |F| is much smaller.
 ```
 .
 ├── datatypes.h                    # Graph type aliases and traversal helpers
-├── exact_coloring/
-│   └── exact_coloring.h           # Chromatic polynomial via inclusion-exclusion
+├── is_exact_coloring/
+│   └── is_exact_coloring.h        # IS-based exact coloring (chromatic polynomial via inclusion-exclusion)
 ├── generators/
 │   ├── GeneratorInterface.h       # Abstract base class for graph generators
 │   ├── Cycle.h                    # Cycle graph C(n)
 │   └── GeneralizedPeterson.h      # Generalized Petersen graph GP(n,k)
-├── demo_exact_coloring.cpp        # Exact chromatic number demo
-├── demo_is_removal_coloring.cpp    # Independent set removal coloring demo
+├── demo_is_exact_coloring.cpp     # IS-based exact coloring demo (all graph families)
+├── demo_is_removal_coloring.cpp   # IS-removal coloring demo
 ├── tests.cpp                      # Test suite (cycles, complete, empty, Petersen, bipartite)
 ├── Mtx2Graph.hpp / Mtx2Graph.cpp  # Matrix Market (.mtx) → graph conversion
 ├── mmio.h / mmio.cpp              # Matrix Market I/O (NIST)
@@ -168,7 +181,7 @@ Dense graphs scale better because |F| is much smaller.
 └── process_produced_graph.cpp     # Fruchterman-Reingold layout → GraphViz
 ```
 
-### Key functions (`exact_coloring/exact_coloring.h`)
+### Key functions (`is_exact_coloring/is_exact_coloring.h`)
 
 | Function               | Description                                              |
 |------------------------|----------------------------------------------------------|
