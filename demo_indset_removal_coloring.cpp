@@ -38,10 +38,10 @@ static vector<Ver> ind_set(Graph g) {
     return iset;
 }
 
-// IS-removal coloring: repeatedly extracts an independent set, assigns it the
+// IndSet-removal coloring: repeatedly extracts an independent set, assigns it the
 // next color, removes those vertices' edges, and repeats until the graph is
 // edge-free.
-static vector<int> is_removal_color(Graph g) {
+static vector<int> indset_removal_color(Graph g) {
     int cur_color = 0;
     vector<Ver> U;
     vector<int> coloring(boost::num_vertices(g), 0);
@@ -63,7 +63,7 @@ static vector<int> is_removal_color(Graph g) {
 
 int main() {
     Graph g = Cycle(5).generate();
-    vector<int> coloring = is_removal_color(g);
+    vector<int> coloring = indset_removal_color(g);
     print_vec(coloring);
     return 0;
 }

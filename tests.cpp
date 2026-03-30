@@ -9,7 +9,7 @@
 #include "datatypes.h"
 #include "generators/GeneralizedPeterson.h"
 #include "generators/Cycle.h"
-#include "is_exact_coloring/is_exact_coloring.h"
+#include "indset_exact_coloring/indset_exact_coloring.h"
 
 // Note: c_k() is not the standard chromatic polynomial.
 // It returns 0 for k < χ(G) and nonzero for k ≥ χ(G), which lets us find

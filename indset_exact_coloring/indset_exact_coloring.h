@@ -1,5 +1,5 @@
-#ifndef IS_EXACT_COLORING_H
-#define IS_EXACT_COLORING_H
+#ifndef INDSET_EXACT_COLORING_H
+#define INDSET_EXACT_COLORING_H
 
 #include <cmath>
 #include <set>
@@ -68,4 +68,4 @@ static std::set<dynbit> gen_ind_set_for_g(Graph& g) {
     return F;
 }
 
-#endif // IS_EXACT_COLORING_H
+#endif // INDSET_EXACT_COLORING_H

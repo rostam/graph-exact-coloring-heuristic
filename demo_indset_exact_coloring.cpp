@@ -3,7 +3,7 @@
 #include <string>
 
 #include "datatypes.h"
-#include "is_exact_coloring/is_exact_coloring.h"
+#include "indset_exact_coloring/indset_exact_coloring.h"
 #include "generators/Cycle.h"
 #include "generators/GeneralizedPeterson.h"
 
@@ -49,7 +49,7 @@ static Graph complete_multipartite(int k, int s) {
 }
 
 int main() {
-    std::cout << "=== IS-Based Exact Coloring: chromatic numbers ===\n\n";
+    std::cout << "=== IndSet-Based Exact Coloring: chromatic numbers ===\n\n";
 
     std::cout << "Cycle graphs:\n";
     for (int n : {3, 4, 5, 6, 7})
