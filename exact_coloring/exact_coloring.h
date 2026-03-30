@@ -47,10 +47,14 @@ static int alpha(dynbit X, std::set<dynbit> F) {
 
 // Computes the chromatic polynomial value at k using inclusion-exclusion over
 // all independent sets F of g:  sum_{V} (-1)^|V| * alpha(V, F)^k
-static int c_k(std::set<dynbit> F, Graph g, int k) {
-    int cnt = 0;
+// Uses long long to avoid overflow for dense graphs (e.g. K_n with n >= 9).
+static long long c_k(std::set<dynbit> F, Graph g, int k) {
+    long long cnt = 0;
     power_set(num_vertices(g), [&](dynbit vi) {
-        cnt += (int)std::pow(-1.0, (int)vi.count()) * (int)std::pow(alpha(vi, F), k);
+        long long a = alpha(vi, F);
+        long long ak = 1;
+        for (int i = 0; i < k; i++) ak *= a;
+        cnt += (vi.count() % 2 == 0) ? ak : -ak;
     });
     return cnt;
 }

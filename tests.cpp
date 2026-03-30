@@ -385,10 +385,6 @@ static void test_suitesparse() {
 //   Cycles    C_8  ~3ms  C_10  ~30ms  C_12  ~300ms  C_13  ~1.5s  C_14  ~3s
 //   Bipartite K_{4,4} ~2ms  K_{6,6} ~130ms  K_{7,7} ~1s
 //   Petersen  GP(6,2) ~250ms  GP(7,2) ~2.5s
-//
-// Limitation: c_k() accumulates int sums; intermediate terms overflow int for
-// K_n with n >= 9 (the partial sums of (-1)^|V| * alpha^k exceed 2^31), so
-// complete graphs K_9 and larger are not included here.
 
 static void timed_check(const std::string& name, Graph g, int expected_chi) {
     auto t0 = std::chrono::steady_clock::now();
@@ -411,7 +407,7 @@ static void test_scaling() {
 
     // Complete graphs K_5 – K_8  (χ = n)
     // |F| = n+1 (only singletons), so the algorithm stays fast even though
-    // the graph is dense.  K_9 and above overflow int in the polynomial sum.
+    // the graph is dense.
     for (int n : {5, 6, 7, 8}) {
         Graph g;
         for (int i = 0; i < n; i++)
@@ -435,6 +431,42 @@ static void test_scaling() {
     // Generalized Petersen graphs  (χ = 3)
     timed_check("GP(6,2)",  GeneralizedPeterson(6, 2).generate(), 3);
     timed_check("GP(7,2)",  GeneralizedPeterson(7, 2).generate(), 3);
+}
+
+// ── High chromatic number graphs ─────────────────────────────────────────────
+// K_{2×k}: complete k-partite graph with 2 vertices per part.
+//   - 2k vertices, k*(2k-1) - k = k*(2k-2)/2... actually k*(k-1) edges between parts
+//     more precisely: C(2k,2) - k edges = k(2k-1) - k = k(2k-2) = 2k(k-1)
+//   - χ = k  (each part gets one color; parts are independent sets)
+//   - |F| = 3^k independent sets (each part: both/neither/one-of-two vertices)
+//     so it scales far better than K_n or sparse graphs of the same vertex count.
+//
+// K_9:  P(K_9,  9) = 9! = 362880
+// K_10: P(K_10,10) = 10! = 3628800
+// (Both require long long; int overflows at k >= 9.)
+
+static void test_high_chromatic() {
+    // K_9 and K_10 — verifies long long fix and tests χ = 9,10
+    for (int n : {9, 10}) {
+        Graph g;
+        for (int i = 0; i < n; i++)
+            for (int j = i + 1; j < n; j++)
+                add_edge(i, j, g);
+        auto F = gen_ind_set_for_g(g);
+        long long expected = 1;
+        for (int i = 1; i <= n; i++) expected *= i;  // n!
+        std::ostringstream lbl;
+        lbl << "c_k(K_" << n << ", " << n << ") = " << expected << "  (= " << n << "!)";
+        check(lbl.str(), c_k(F, g, n) == expected);
+        timed_check("K_" + std::to_string(n), g, n);
+    }
+
+    // K_{2×k} for k = 5..9 — natural family with χ = k, small |F|
+    // K_{2×5} = 10v, χ=5; K_{2×9} = 18v, χ=9
+    for (int k : {5, 6, 7, 8, 9}) {
+        timed_check("K_{2×" + std::to_string(k) + "} (χ=" + std::to_string(k) + ")",
+                    complete_multipartite(k, 2), k);
+    }
 }
 
 int main() {
@@ -461,6 +493,9 @@ int main() {
 
     std::cout << "\n=== Scaling tests ===\n";
     test_scaling();
+
+    std::cout << "\n=== High chromatic number graphs ===\n";
+    test_high_chromatic();
 
     std::cout << "\n" << passed << " passed, " << failed << " failed.\n";
     return failed == 0 ? 0 : 1;

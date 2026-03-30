@@ -394,7 +394,7 @@ summarizes the chromatic numbers recovered by the exact algorithm.
 
 \begin{table}[h]
 \centering
-\caption{Chromatic numbers computed by the exact algorithm (65 assertions, all passing).}
+\caption{Chromatic numbers computed by the exact algorithm (78 assertions, all passing).}
 \label{tab:results}
 \begin{tabular}{llcccc}
 \toprule
@@ -412,6 +412,8 @@ $K_1$ & Single vertex            & 1  & 0  & 1 & 1 \\
 $K_2$ & Single edge              & 2  & 1  & 2 & 2 \\
 $K_3$ & Triangle                 & 3  & 3  & 3 & 3 \\
 $K_4$ & Complete graph           & 4  & 6  & 4 & 4 \\
+$K_9$ & Complete graph           & 9  & 36 & 9 & 9 \\
+$K_{10}$ & Complete graph        & 10 & 45 & 10 & 10 \\
 $E_1$ & Isolated vertex          & 1  & 0  & 1 & 1 \\
 $E_3$ & Three isolated vertices  & 3  & 0  & 1 & 1 \\
 \midrule
@@ -431,6 +433,11 @@ $W_9$ & Hub $+\,C_8$ (even rim)     & 9  & 16 & 3 & 3 \\
 $K_{2,2,2}$   & Octahedron            & 6  & 12 & 3 & 3 \\
 $K_{3,3,3}$   & Complete 3-partite    & 9  & 27 & 3 & 3 \\
 $K_{2,2,2,2}$ & Complete 4-partite    & 8  & 24 & 4 & 4 \\
+$K_{2\times5}$ & Complete 5-partite   & 10 & 20 & 5 & 5 \\
+$K_{2\times6}$ & Complete 6-partite   & 12 & 30 & 6 & 6 \\
+$K_{2\times7}$ & Complete 7-partite   & 14 & 42 & 7 & 7 \\
+$K_{2\times8}$ & Complete 8-partite   & 16 & 56 & 8 & 8 \\
+$K_{2\times9}$ & Complete 9-partite   & 18 & 72 & 9 & 9 \\
 \midrule
 \multicolumn{6}{l}{\textit{Generalized Petersen graphs} $GP(n,k)$} \\
 $GP(4,1)$ & 3-cube $Q_3$ (bipartite)    & 8  & 12 & 2 & 2 \\
@@ -443,8 +450,10 @@ $GP(7,2)$ & ---                         & 14 & 21 & 3 & 3 \\
 \end{tabular}
 \end{table}
 
-All 65 test assertions pass, confirming both the zero/nonzero behavior of
+All 78 test assertions pass, confirming both the zero/nonzero behavior of
 $c_k$ and, for complete graphs, the exact value of the formula at $k = \chi(G)$.
+In particular, $c_k(K_9, 9) = 9! = 362{,}880$ and $c_k(K_{10}, 10) = 10! = 3{,}628{,}800$
+are verified exactly, confirming the correctness of the \texttt{long long} accumulation.
 
 \subsection{Exact Values of $c_k$ at the Chromatic Number}
 
@@ -619,13 +628,42 @@ $GP(8,3)$ & Gen.\ Petersen & 16 & 24 & 2 & $\approx$15\,s \\
 \end{tabular}
 \end{table}
 
-\paragraph{Overflow limitation.}
-The implementation accumulates the inclusion-exclusion sum in a 32-bit
-\texttt{int}.  For dense complete graphs $K_n$ with $n \geq 9$, individual
-terms of the form $(-1)^{|S|}\,\alpha(S,\mathcal{F})^k$ exceed $2^{31}$,
-causing silent overflow.  Cycles and bipartite graphs are not affected because
-their independent-set counts are much smaller.  Replacing \texttt{int} with
-\texttt{int64\_t} would extend the safe range to $K_n$ with $n \lesssim 18$.
+\subsection{High Chromatic Number Graphs}
+
+Complete graphs $K_n$ have $\chi(K_n) = n$ and $|\mathcal{F}| = n+1$ (only
+singletons and the empty set), so the independent-set enumeration phase is
+trivial.  The bottleneck is computing the chromatic polynomial at each candidate
+$k$, which requires intermediate terms of the form
+$(-1)^{|S|}\,\alpha(S,\mathcal{F})^k$.  For $K_9$, these terms reach
+$9^9 \approx 3.9 \times 10^8$, which fits comfortably in a 64-bit integer.
+The implementation uses \texttt{long long} accumulation with integer
+exponentiation (no floating point), giving correct results up to at least
+$K_{10}$ ($10! = 3{,}628{,}800$, verified by the test suite).
+
+Complete $k$-partite graphs $K_{2 \times k}$ (two vertices per part) provide
+compact benchmarks for high chromatic numbers: only $2k$ vertices but $\chi = k$.
+Their independent-set families have exactly $3^k$ members (each part contributes
+three choices: both, neither, or one vertex), far fewer than $2^{2k}$, so the
+algorithm scales well despite the large chromatic number.
+
+\begin{table}[h]
+\centering
+\caption{High chromatic number graphs (Release build, single core).}
+\label{tab:highchi}
+\begin{tabular}{lcccc}
+\toprule
+Graph & $V$ & $E$ & $\chi$ & Time \\
+\midrule
+$K_9$         & 9  & 36 & 9 & 3\,ms \\
+$K_{10}$      & 10 & 45 & 10 & 9\,ms \\
+$K_{2\times5}$ & 10 & 20 & 5 & 7\,ms \\
+$K_{2\times6}$ & 12 & 30 & 6 & 47\,ms \\
+$K_{2\times7}$ & 14 & 42 & 7 & 287\,ms \\
+$K_{2\times8}$ & 16 & 56 & 8 & 1.1\,s \\
+$K_{2\times9}$ & 18 & 72 & 9 & 5.5\,s \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Complexity Analysis}\label{sec:complexity}

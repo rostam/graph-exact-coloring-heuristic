@@ -71,6 +71,7 @@ Timing was measured on a single core (Release build, Ubuntu 22.04).
 | C₆ | Hexagon | 6 | 6 | 2 |
 | C₇ | 7-cycle | 7 | 7 | 3 |
 | K₁ – K₄ | Complete graphs | 1–4 | 0–6 | 1–4 |
+| **K₉, K₁₀** | **Complete graphs** | **9,10** | **36,45** | **9,10** |
 | E₁, E₃ | Edgeless | 1,3 | 0 | 1 |
 | K₂,₃ | Complete bipartite | 5 | 6 | 2 |
 | **W₅,W₇,W₉** | **Wheel (even rim) → χ=3** | 5,7,9 | 8,12,16 | **3** |
@@ -84,6 +85,7 @@ Timing was measured on a single core (Release build, Ubuntu 22.04).
 | GP(6,1) | Hexagonal prism (bipartite) | 12 | 18 | 2 |
 | GP(6,2) | — | 12 | 18 | 3 |
 | GP(7,2) | — | 14 | 21 | 3 |
+| **K_{2×5} – K_{2×9}** | **Complete k-partite (2 per part)** | **10–18** | **20–72** | **5–9** |
 
 ### SuiteSparse Matrix Collection
 
@@ -101,7 +103,7 @@ Large matrices are reduced to a k-vertex BFS subgraph.
 The `matrices/` directory contains these `.mtx` files. The test suite reads
 them automatically and skips with `[SKIP]` if a file is not found.
 
-69 test assertions, 0 failures.
+78 test assertions, 0 failures.
 
 ### Scaling — wall-clock time
 
@@ -128,8 +130,19 @@ Dense graphs scale better because |F| is much smaller.
 | GP(7,2) | 14 | 21 | 3 | 1.3 s |
 | GP(8,3) | 16 | 24 | 2 | ~15 s |
 
-> **Overflow note:** K_n with n ≥ 9 produces wrong results — intermediate
-> inclusion-exclusion sums exceed 2³¹. Cycles and bipartite graphs are unaffected.
+### High chromatic numbers
+
+`c_k()` uses `long long` accumulation with integer exponentiation, so it handles χ up to at least 10 correctly. K_{2×k} (complete k-partite with 2 vertices per part) provides compact high-χ benchmarks: only 2k vertices but exactly k independent-set classes.
+
+| Graph | V | E | χ | Time |
+|---|:-:|:-:|:-:|--:|
+| K₉ | 9 | 36 | 9 | 3 ms |
+| K₁₀ | 10 | 45 | 10 | 9 ms |
+| K_{2×5} | 10 | 20 | 5 | 7 ms |
+| K_{2×6} | 12 | 30 | 6 | 47 ms |
+| K_{2×7} | 14 | 42 | 7 | 287 ms |
+| K_{2×8} | 16 | 56 | 8 | 1.1 s |
+| K_{2×9} | 18 | 72 | 9 | 5.5 s |
 
 ## Project Structure
 
