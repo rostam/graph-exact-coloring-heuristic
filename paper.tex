@@ -9,6 +9,7 @@
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{graphicx}
+\usepackage{makecell}
 
 \geometry{margin=1in}
 
@@ -381,6 +382,7 @@ $(i+1) \bmod n$.  Spoke edges connect outer vertex $i$ to inner vertex $i+n$.
 Inner edges connect $i+n$ to $(i+n+k) \bmod n + n$ with a boundary correction.
 
 \paragraph{Build system.}
+\begin{sloppypar}
 The project uses CMake 3.10 or later.  Three targets are built:
 \texttt{indset\_exact\_coloring} (IndSet-Based Exact Coloring demo,
 \texttt{demo\_indset\_exact\_coloring.cpp}),
@@ -388,6 +390,7 @@ The project uses CMake 3.10 or later.  Three targets are built:
 \texttt{demo\_indset\_removal\_coloring.cpp}), and \texttt{tests}
 (\texttt{tests.cpp}, the test suite described in
 Section~\ref{sec:experiments}).
+\end{sloppypar}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Experimental Results}\label{sec:experiments}
@@ -404,7 +407,7 @@ summarizes results for both the IndSet-Based Exact Coloring and IndSet-Removal C
 \label{tab:results}
 \begin{tabular}{llccccc}
 \toprule
-Graph & Description & $|V|$ & $|E|$ & Known $\chi$ & IndSet-Exact & IndSet-Removal \\
+Graph & Description & $|V|$ & $|E|$ & \makecell{Known\\$\chi$} & \makecell{IndSet-\\Exact} & \makecell{IndSet-\\Removal} \\
 \midrule
 \multicolumn{7}{l}{\textit{Cycle graphs}} \\
 $C_3$ & Triangle                    & 3  & 3   & 3  & 3  & 3  \\
@@ -570,16 +573,17 @@ vertices via BFS from a fixed starting vertex.
 \caption{SuiteSparse graphs: known $\chi$, IndSet-Based Exact Coloring,
   IndSet-Removal Coloring, and wall-clock time for each algorithm.}
 \label{tab:suitesparse}
-\begin{tabular}{lllccccccc}
+{\footnotesize
+\begin{tabular}{lllccc ccc c}
 \toprule
-Matrix & Group & Processing & $|V|$ & $|E|$ & Known $\chi$ & IndSet-Exact & IndSet-Removal & Exact Time & Removal Time \\
+Matrix & Group & Processing & $|V|$ & $|E|$ & \makecell{Known\\$\chi$} & \makecell{IndSet-\\Exact} & \makecell{IndSet-\\Removal} & \makecell{Exact\\Time} & \makecell{Removal\\Time} \\
 \midrule
 \texttt{cage3}   & vanHeukelum & symmetrized (full) & 5  &  7 & 3 & 3 & 4 & $<$1\,ms & $<$1\,ms \\
 \texttt{cage4}   & vanHeukelum & symmetrized (full) & 9  & 20 & 3 & 3 & 7 &    3\,ms & $<$1\,ms \\
 \texttt{GD98\_a} & Pajek       & BFS-10 subgraph    & 10 & 10 & 3 & 3 & 3 &   81\,ms & $<$1\,ms \\
 \texttt{ndtest}  & (project)   & BFS-10 subgraph    & 10 & 14 & 2 & 2 & 6 &   15\,ms & $<$1\,ms \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 The cage matrices arise from random walks on finite words over the DNA
@@ -608,7 +612,7 @@ such as $K_{m,m}$ have much smaller $|\mathcal{F}|$ and therefore scale better.
 \label{tab:scaling}
 \begin{tabular}{llccccccc}
 \toprule
-Graph & Family & $|V|$ & $|E|$ & Known $\chi$ & IndSet-Exact & IndSet-Removal & Exact Time & Removal Time \\
+Graph & Family & $|V|$ & $|E|$ & \makecell{Known\\$\chi$} & \makecell{IndSet-\\Exact} & \makecell{IndSet-\\Removal} & \makecell{Exact\\Time} & \makecell{Removal\\Time} \\
 \midrule
 $C_8$     & Cycle          &  8 &  8 & 2 & 2 & 4 &    1\,ms & $<$1\,ms \\
 $C_9$     & Cycle          &  9 &  9 & 3 & 3 & 3 &    7\,ms & $<$1\,ms \\
@@ -661,7 +665,7 @@ algorithm scales well despite the large chromatic number.
 \label{tab:highchi}
 \begin{tabular}{lccccccc}
 \toprule
-Graph & $V$ & $E$ & Known $\chi$ & IndSet-Exact & IndSet-Removal & Exact Time & Removal Time \\
+Graph & $V$ & $E$ & \makecell{Known\\$\chi$} & \makecell{IndSet-\\Exact} & \makecell{IndSet-\\Removal} & \makecell{Exact\\Time} & \makecell{Removal\\Time} \\
 \midrule
 $K_9$          & 9  & 36  & 9  & 9  & 9  &    3\,ms & $<$1\,ms \\
 $K_{10}$       & 10 & 45  & 10 & 10 & 10 &    9\,ms & $<$1\,ms \\
@@ -715,6 +719,7 @@ on structured sparse or multipartite graphs.
 
 \subsection{Independent Set Enumeration}
 
+\begin{sloppypar}
 \texttt{gen\_ind\_set\_for\_g} calls \texttt{power\_set}, which iterates over
 all $2^n$ subsets.  For each subset $B$, \texttt{is\_indep\_set} checks all
 pairs of set bits: at most $O(n^2)$ edge queries.  Hence the enumeration phase
@@ -722,6 +727,7 @@ runs in $O(2^n \cdot n^2)$ time and produces a set $\mathcal{F}$ of at most
 $3^n / \text{poly}(n)$ independent sets (by the Moon--Moser theorem on the
 maximum number of maximal independent sets in a graph with $n$
 vertices~\cite{MoonMoser1965}).
+\end{sloppypar}
 
 \subsection{Evaluation of $c_k$}
 
