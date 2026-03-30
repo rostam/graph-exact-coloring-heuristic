@@ -31,16 +31,20 @@ make
 
 Produces two executables:
 
-| Binary          | Source       | Description                                    |
-|-----------------|--------------|------------------------------------------------|
-| `exact_coloring`| `main.cpp`   | Finds chromatic number of GP(5,2) and C_3–C_6  |
-| `tests`         | `tests.cpp`  | Runs the test suite and prints pass/fail counts |
+| Binary            | Source                     | Description                                    |
+|-------------------|----------------------------|------------------------------------------------|
+| `exact_coloring`  | `demo_exact_coloring.cpp`  | Finds chromatic number of GP(5,2) and C_3–C_6  |
+| `greedy_coloring` | `demo_greedy_coloring.cpp` | Greedy independent-set heuristic coloring demo  |
+| `tests`           | `tests.cpp`                | Runs the test suite and prints pass/fail counts |
 
 ## Usage
 
 ```bash
 # Chromatic numbers of the Petersen graph and cycle graphs
 ./exact_coloring
+
+# Greedy heuristic coloring demo
+./greedy_coloring
 
 # Run the test suite
 ./tests
@@ -155,8 +159,8 @@ Dense graphs scale better because |F| is much smaller.
 │   ├── GeneratorInterface.h       # Abstract base class for graph generators
 │   ├── Cycle.h                    # Cycle graph C(n)
 │   └── GeneralizedPeterson.h      # Generalized Petersen graph GP(n,k)
-├── main.cpp                       # Exact chromatic number demo
-├── main2.cpp                      # Greedy independent-set coloring heuristic
+├── demo_exact_coloring.cpp        # Exact chromatic number demo
+├── demo_greedy_coloring.cpp       # Greedy independent-set coloring heuristic
 ├── tests.cpp                      # Test suite (cycles, complete, empty, Petersen, bipartite)
 ├── Mtx2Graph.hpp / Mtx2Graph.cpp  # Matrix Market (.mtx) → graph conversion
 ├── mmio.h / mmio.cpp              # Matrix Market I/O (NIST)
