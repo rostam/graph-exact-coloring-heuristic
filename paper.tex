@@ -568,16 +568,16 @@ vertices via BFS from a fixed starting vertex.
 \begin{table}[h]
 \centering
 \caption{SuiteSparse graphs: known $\chi$, IndSet-Based Exact Coloring,
-  IndSet-Removal Coloring, and exact algorithm wall-clock time.}
+  IndSet-Removal Coloring, and wall-clock time for each algorithm.}
 \label{tab:suitesparse}
-\begin{tabular}{lllcccccc}
+\begin{tabular}{lllccccccc}
 \toprule
-Matrix & Group & Processing & $|V|$ & $|E|$ & Known $\chi$ & IndSet-Exact & IndSet-Removal & Time \\
+Matrix & Group & Processing & $|V|$ & $|E|$ & Known $\chi$ & IndSet-Exact & IndSet-Removal & Exact Time & Removal Time \\
 \midrule
-\texttt{cage3}   & vanHeukelum & symmetrized (full) & 5  &  7 & 3 & 3 & 4 & $<$1\,ms \\
-\texttt{cage4}   & vanHeukelum & symmetrized (full) & 9  & 20 & 3 & 3 & 7 &    3\,ms \\
-\texttt{GD98\_a} & Pajek       & BFS-10 subgraph    & 10 & 10 & 3 & 3 & 3 &   81\,ms \\
-\texttt{ndtest}  & (project)   & BFS-10 subgraph    & 10 & 14 & 2 & 2 & 6 &   15\,ms \\
+\texttt{cage3}   & vanHeukelum & symmetrized (full) & 5  &  7 & 3 & 3 & 4 & $<$1\,ms & $<$1\,ms \\
+\texttt{cage4}   & vanHeukelum & symmetrized (full) & 9  & 20 & 3 & 3 & 7 &    3\,ms & $<$1\,ms \\
+\texttt{GD98\_a} & Pajek       & BFS-10 subgraph    & 10 & 10 & 3 & 3 & 3 &   81\,ms & $<$1\,ms \\
+\texttt{ndtest}  & (project)   & BFS-10 subgraph    & 10 & 14 & 2 & 2 & 6 &   15\,ms & $<$1\,ms \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -606,32 +606,32 @@ such as $K_{m,m}$ have much smaller $|\mathcal{F}|$ and therefore scale better.
 \caption{Wall-clock time for larger graphs (Release build, single core, Ubuntu 22.04).
   IndSet-Exact gives the exact chromatic number; IndSet-Removal is the heuristic upper bound.}
 \label{tab:scaling}
-\begin{tabular}{llccccc c}
+\begin{tabular}{llccccccc}
 \toprule
-Graph & Family & $|V|$ & $|E|$ & Known $\chi$ & IndSet-Exact & IndSet-Removal & Time \\
+Graph & Family & $|V|$ & $|E|$ & Known $\chi$ & IndSet-Exact & IndSet-Removal & Exact Time & Removal Time \\
 \midrule
-$C_8$     & Cycle          &  8 &  8 & 2 & 2 & 4 &    1\,ms \\
-$C_9$     & Cycle          &  9 &  9 & 3 & 3 & 3 &    7\,ms \\
-$C_{10}$  & Cycle          & 10 & 10 & 2 & 2 & 4 &   24\,ms \\
-$C_{11}$  & Cycle          & 11 & 11 & 3 & 3 & 3 &   86\,ms \\
-$C_{12}$  & Cycle          & 12 & 12 & 2 & 2 & 4 &  168\,ms \\
-$C_{13}$  & Cycle          & 13 & 13 & 3 & 3 & 3 &  786\,ms \\
-$C_{14}$  & Cycle          & 14 & 14 & 2 & 2 & 4 & $\approx$3\,s \\
-$C_{16}$  & Cycle          & 16 & 16 & 2 & 2 & 4 & $\approx$33\,s \\
+$C_8$     & Cycle          &  8 &  8 & 2 & 2 & 4 &    1\,ms & $<$1\,ms \\
+$C_9$     & Cycle          &  9 &  9 & 3 & 3 & 3 &    7\,ms & $<$1\,ms \\
+$C_{10}$  & Cycle          & 10 & 10 & 2 & 2 & 4 &   24\,ms & $<$1\,ms \\
+$C_{11}$  & Cycle          & 11 & 11 & 3 & 3 & 3 &   86\,ms & $<$1\,ms \\
+$C_{12}$  & Cycle          & 12 & 12 & 2 & 2 & 4 &  168\,ms & $<$1\,ms \\
+$C_{13}$  & Cycle          & 13 & 13 & 3 & 3 & 3 &  786\,ms & $<$1\,ms \\
+$C_{14}$  & Cycle          & 14 & 14 & 2 & 2 & 4 & $\approx$3\,s & $<$1\,ms \\
+$C_{16}$  & Cycle          & 16 & 16 & 2 & 2 & 4 & $\approx$33\,s & $<$1\,ms \\
 \midrule
-$K_5$     & Complete       &  5 & 10 & 5 & 5 & 5 & $<$1\,ms \\
-$K_6$     & Complete       &  6 & 15 & 6 & 6 & 6 & $<$1\,ms \\
-$K_7$     & Complete       &  7 & 21 & 7 & 7 & 7 & $<$1\,ms \\
-$K_8$     & Complete       &  8 & 28 & 8 & 8 & 8 &    1\,ms \\
+$K_5$     & Complete       &  5 & 10 & 5 & 5 & 5 & $<$1\,ms & $<$1\,ms \\
+$K_6$     & Complete       &  6 & 15 & 6 & 6 & 6 & $<$1\,ms & $<$1\,ms \\
+$K_7$     & Complete       &  7 & 21 & 7 & 7 & 7 & $<$1\,ms & $<$1\,ms \\
+$K_8$     & Complete       &  8 & 28 & 8 & 8 & 8 &    1\,ms & $<$1\,ms \\
 \midrule
-$K_{4,4}$ & Bipartite      &  8 & 16 & 2 & 2 & 5 &    1\,ms \\
-$K_{5,5}$ & Bipartite      & 10 & 25 & 2 & 2 & 6 &    9\,ms \\
-$K_{6,6}$ & Bipartite      & 12 & 36 & 2 & 2 & 7 &   69\,ms \\
-$K_{7,7}$ & Bipartite      & 14 & 49 & 2 & 2 & 8 &  536\,ms \\
+$K_{4,4}$ & Bipartite      &  8 & 16 & 2 & 2 & 5 &    1\,ms & $<$1\,ms \\
+$K_{5,5}$ & Bipartite      & 10 & 25 & 2 & 2 & 6 &    9\,ms & $<$1\,ms \\
+$K_{6,6}$ & Bipartite      & 12 & 36 & 2 & 2 & 7 &   69\,ms & $<$1\,ms \\
+$K_{7,7}$ & Bipartite      & 14 & 49 & 2 & 2 & 8 &  536\,ms & $<$1\,ms \\
 \midrule
-$GP(6,2)$ & Gen.\ Petersen & 12 & 18 & 3 & 3 & 4 &  135\,ms \\
-$GP(7,2)$ & Gen.\ Petersen & 14 & 21 & 3 & 3 & 4 & 1333\,ms \\
-$GP(8,3)$ & Gen.\ Petersen & 16 & 24 & 2 & 2 & 5 & $\approx$15\,s \\
+$GP(6,2)$ & Gen.\ Petersen & 12 & 18 & 3 & 3 & 4 &  135\,ms & $<$1\,ms \\
+$GP(7,2)$ & Gen.\ Petersen & 14 & 21 & 3 & 3 & 4 & 1333\,ms & $<$1\,ms \\
+$GP(8,3)$ & Gen.\ Petersen & 16 & 24 & 2 & 2 & 5 & $\approx$15\,s & $<$1\,ms \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -657,19 +657,19 @@ algorithm scales well despite the large chromatic number.
 \begin{table}[h]
 \centering
 \caption{High chromatic number graphs: known $\chi$, IndSet-Based Exact Coloring,
-  IndSet-Removal Coloring, and exact algorithm wall-clock time.}
+  IndSet-Removal Coloring, and wall-clock time for each algorithm.}
 \label{tab:highchi}
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccccc}
 \toprule
-Graph & $V$ & $E$ & Known $\chi$ & IndSet-Exact & IndSet-Removal & Time \\
+Graph & $V$ & $E$ & Known $\chi$ & IndSet-Exact & IndSet-Removal & Exact Time & Removal Time \\
 \midrule
-$K_9$          & 9  & 36  & 9  & 9  & 9  & 3\,ms \\
-$K_{10}$       & 10 & 45  & 10 & 10 & 10 & 9\,ms \\
-$K_{2\times5}$ & 10 & 40  & 5  & 5  & 9  & 7\,ms \\
-$K_{2\times6}$ & 12 & 60  & 6  & 6  & 11 & 47\,ms \\
-$K_{2\times7}$ & 14 & 84  & 7  & 7  & 13 & 287\,ms \\
-$K_{2\times8}$ & 16 & 112 & 8  & 8  & 15 & 1.1\,s \\
-$K_{2\times9}$ & 18 & 144 & 9  & 9  & 17 & 5.5\,s \\
+$K_9$          & 9  & 36  & 9  & 9  & 9  &    3\,ms & $<$1\,ms \\
+$K_{10}$       & 10 & 45  & 10 & 10 & 10 &    9\,ms & $<$1\,ms \\
+$K_{2\times5}$ & 10 & 40  & 5  & 5  & 9  &    7\,ms & $<$1\,ms \\
+$K_{2\times6}$ & 12 & 60  & 6  & 6  & 11 &   47\,ms & $<$1\,ms \\
+$K_{2\times7}$ & 14 & 84  & 7  & 7  & 13 &  287\,ms & $<$1\,ms \\
+$K_{2\times8}$ & 16 & 112 & 8  & 8  & 15 &  1.1\,s  & $<$1\,ms \\
+$K_{2\times9}$ & 18 & 144 & 9  & 9  & 17 &  5.5\,s  & $<$1\,ms \\
 \bottomrule
 \end{tabular}
 \end{table}
