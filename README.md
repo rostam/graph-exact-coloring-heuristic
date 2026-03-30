@@ -1,6 +1,6 @@
 # Graph Exact Coloring Heuristic
 
-A C++17 library that computes the **chromatic number** of a graph via the chromatic polynomial, using inclusion-exclusion over all independent sets. A greedy heuristic variant (`main2.cpp`) is also provided.
+A C++17 library that computes the **chromatic number** of a graph via the chromatic polynomial, using inclusion-exclusion over all independent sets. A IS-removal coloring variant (`demo_is_removal_coloring.cpp`) is also provided.
 
 ## Algorithm
 
@@ -34,7 +34,7 @@ Produces two executables:
 | Binary            | Source                     | Description                                    |
 |-------------------|----------------------------|------------------------------------------------|
 | `exact_coloring`  | `demo_exact_coloring.cpp`  | Finds chromatic number of GP(5,2) and C_3–C_6  |
-| `greedy_coloring` | `demo_greedy_coloring.cpp` | Greedy independent-set heuristic coloring demo  |
+| `is_removal_coloring` | `demo_is_removal_coloring.cpp` | Independent set removal coloring demo  |
 | `tests`           | `tests.cpp`                | Runs the test suite and prints pass/fail counts |
 
 ## Usage
@@ -43,8 +43,8 @@ Produces two executables:
 # Chromatic numbers of the Petersen graph and cycle graphs
 ./exact_coloring
 
-# Greedy heuristic coloring demo
-./greedy_coloring
+# IS-removal coloring demo
+./is_removal_coloring
 
 # Run the test suite
 ./tests
@@ -160,7 +160,7 @@ Dense graphs scale better because |F| is much smaller.
 │   ├── Cycle.h                    # Cycle graph C(n)
 │   └── GeneralizedPeterson.h      # Generalized Petersen graph GP(n,k)
 ├── demo_exact_coloring.cpp        # Exact chromatic number demo
-├── demo_greedy_coloring.cpp       # Greedy independent-set coloring heuristic
+├── demo_is_removal_coloring.cpp    # Independent set removal coloring demo
 ├── tests.cpp                      # Test suite (cycles, complete, empty, Petersen, bipartite)
 ├── Mtx2Graph.hpp / Mtx2Graph.cpp  # Matrix Market (.mtx) → graph conversion
 ├── mmio.h / mmio.cpp              # Matrix Market I/O (NIST)
@@ -198,7 +198,7 @@ The images below illustrate the heuristic idea:
 *Subgraph used for exact coloring*
 
 ![Heuristic Coloring](coloring2.png)
-*Heuristic coloring of the original graph*
+*IS-removal coloring of the original graph*
 
 ![Exact Coloring](coloring3.png)
 *Exact coloring of the original graph*

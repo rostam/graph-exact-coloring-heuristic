@@ -46,7 +46,7 @@ over the collection of all independent sets.  The quantity, denoted $c_k(G)$,
 counts the number of ordered $k$-tuples of independent sets of $G$ whose union
 is $V(G)$.  We prove that $c_k(G) = 0$ if and only if $k < \chi(G)$, so the
 chromatic number equals the smallest $k$ for which $c_k(G) \neq 0$.  We also
-describe a companion greedy heuristic that computes an upper bound on
+describe a companion IS-removal coloring algorithm that computes an upper bound on
 $\chi(G)$.  Both algorithms are implemented in C++17 using the Boost Graph
 Library.  We present experimental results on cycles $C_n$, complete graphs $K_n$,
 the Petersen graph $GP(5,2)$ and other generalized Petersen graphs, wheel
@@ -85,15 +85,15 @@ the empty set).  We show that this quantity is zero precisely when $G$ is not
 $k$-colorable, and hence one can binary-search (or linearly scan) over $k$ to
 find $\chi(G)$.
 
-The companion greedy algorithm, implemented in \texttt{main2.cpp}, repeatedly
-extracts a greedy independent set and assigns it the next available color,
-yielding an upper bound that is exact on bipartite and perfect graphs but may
+The companion IS-removal coloring algorithm, implemented in
+\texttt{demo\_is\_removal\_coloring.cpp}, repeatedly extracts an independent set
+and assigns it the next available color, yielding an upper bound that may
 exceed $\chi(G)$ in general.
 
 \paragraph{Organization.}
 Section~\ref{sec:prelim} fixes notation and recalls standard facts about graph
 coloring.  Section~\ref{sec:algorithm} derives the formula and proves its
-correctness.  Section~\ref{sec:heuristic} describes the greedy heuristic.
+correctness.  Section~\ref{sec:heuristic} describes the IS-removal coloring algorithm.
 Section~\ref{sec:implementation} outlines the C++ implementation.
 Section~\ref{sec:experiments} presents experimental results, including
 graphs from the SuiteSparse Matrix Collection.
@@ -278,18 +278,18 @@ E$.  The subset-avoidance test $I \cap S = \emptyset$ reduces to the bitwise
 operation $(I \mathbin{\&} S) = 0$.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{The Greedy Coloring Heuristic}\label{sec:heuristic}
+\section{IS-Removal Coloring}\label{sec:heuristic}
 % ─────────────────────────────────────────────────────────────────────────────
 
 \subsection{Independent Set Extraction}
 
-The greedy procedure (Algorithm~\ref{alg:greedyIS}) builds an independent set
-by iterating through the active vertices in index order.  For each vertex $v$
-selected, it removes $v$ and all of $v$'s current neighbors from the active
-set.
+The IS extraction procedure (Algorithm~\ref{alg:greedyIS}) builds one
+independent set by iterating through the active vertices in index order.
+For each vertex $v$ selected, it removes $v$ and all of $v$'s current
+neighbors from the active set.
 
 \begin{algorithm}
-\caption{Greedy independent set extraction}\label{alg:greedyIS}
+\caption{Independent set extraction}\label{alg:greedyIS}
 \begin{algorithmic}[1]
 \Require Graph $G = (V, E)$; active set $U \subseteq V$
 \Ensure An independent set $I \subseteq U$
@@ -303,19 +303,19 @@ set.
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Greedy Coloring}
+\subsection{IS-Removal Coloring}
 
 Algorithm~\ref{alg:greedycol} repeatedly calls the IS extractor to peel off
-color classes one at a time.
+one independent set (color class) at a time.
 
 \begin{algorithm}
-\caption{Greedy graph coloring}\label{alg:greedycol}
+\caption{IS-removal coloring}\label{alg:greedycol}
 \begin{algorithmic}[1]
 \Require Graph $G = (V, E)$
 \Ensure Coloring array $\mathit{col}[0\ldots n-1]$
 \State $\mathit{col} \gets$ array of size $n$; $k \gets 0$
 \While{$G$ has edges}
-  \State $I \gets \textsc{GreedyIndepSet}(G)$
+  \State $I \gets \textsc{ExtractIndepSet}(G)$
   \For{each $v \in I$}
     \State $\mathit{col}[v] \gets k$
     \State Remove all edges incident to $v$ from $G$
@@ -326,14 +326,14 @@ color classes one at a time.
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Quality of the Heuristic}
+\subsection{Quality and Complexity}
 
-The greedy algorithm is well-known to produce at most $\Delta(G)+1$ colors,
-where $\Delta(G)$ is the maximum degree~\cite{Welsh1967}.  It is exact on
-bipartite graphs and on chordal graphs (with an appropriate vertex ordering),
-but can be arbitrarily far from optimal on general graphs.  Its primary
-advantage is $O(n + m)$ running time per color class, making it practical for
-large sparse graphs.
+IS-removal coloring produces at most $\Delta(G)+1$ colors, where $\Delta(G)$
+is the maximum degree~\cite{Welsh1967}.  The vertex-order traversal makes it
+exact on complete graphs and odd cycles but can be arbitrarily far from optimal
+on bipartite or dense multipartite graphs (see Table~\ref{tab:greedy} for
+empirical comparisons).  Its primary advantage is $O(n + m)$ running time per
+color class, making it practical for large sparse graphs.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Implementation}\label{sec:implementation}
@@ -665,21 +665,21 @@ $K_{2\times9}$ & 18 & 144 & 9 & 5.5\,s \\
 \end{tabular}
 \end{table}
 
-\subsection{Greedy vs.\ Exact Coloring}\label{sec:greedy_vs_exact}
+\subsection{IS-Removal vs.\ Exact Coloring}\label{sec:greedy_vs_exact}
 
-Table~\ref{tab:greedy} compares the number of colors produced by the greedy
-heuristic (Algorithm~\ref{alg:greedycol}) against the true chromatic number
-$\chi(G)$ on the same graph families.  The greedy processes vertices in
+Table~\ref{tab:greedy} compares the number of colors produced by IS-removal
+coloring (Algorithm~\ref{alg:greedycol}) against the true chromatic number
+$\chi(G)$ on the same graph families.  The algorithm processes vertices in
 ascending index order, so its quality depends strongly on the vertex ordering.
 
 \begin{table}[ht]
 \centering
-\caption{Greedy colors vs.\ exact chromatic number $\chi(G)$.
-  ``='' means the greedy is optimal; ``$>$'' means it over-estimates.}
+\caption{IS-removal coloring vs.\ exact chromatic number $\chi(G)$.
+  ``='' means IS-removal is optimal; ``$>$'' means it over-estimates.}
 \label{tab:greedy}
 \begin{tabular}{llcccc}
 \toprule
-Graph & Family & $\chi$ & Greedy & $\Delta(G)$ & Note \\
+Graph & Family & $\chi$ & IS-removal & $\Delta(G)$ & Note \\
 \midrule
 \multicolumn{6}{l}{\textit{Cycles}} \\
 $C_3$  & Odd cycle  & 3 & 3  & 2 & = optimal \\
@@ -722,15 +722,15 @@ $GP(7,2)$ & ---              & 3 & 4 & 3 & over by 1 \\
 The results illustrate several patterns:
 
 \begin{itemize}
-\item \textbf{Complete graphs}: the greedy is always optimal.  Because every
+\item \textbf{Complete graphs}: IS-removal is always optimal.  Because every
   vertex is adjacent to all lower-indexed vertices, each vertex receives a new
   color, achieving exactly $n$ colors for $K_n$.
 
-\item \textbf{Odd cycles}: the greedy is optimal ($\chi = 3$).  Vertex 0 and
+\item \textbf{Odd cycles}: IS-removal is optimal ($\chi = 3$).  Vertex 0 and
   its non-adjacent neighbor both receive color 0, and the single remaining
   vertex requires a third color.
 
-\item \textbf{Even cycles and bipartite graphs}: the greedy performs poorly
+\item \textbf{Even cycles and bipartite graphs}: IS-removal performs poorly
   because the vertex-order traversal fails to exploit the bipartite structure.
   $C_4$ receives 4 colors instead of 2; similarly $GP(6,1)$ (hexagonal prism,
   bipartite) receives 6 instead of 2.
@@ -739,14 +739,14 @@ The results illustrate several patterns:
   regardless of ordering) but over-estimates by 2 when $n$ is odd.
 
 \item \textbf{Complete multipartite $K_{2\times k}$}: the over-count grows
-  linearly with $k$; the greedy uses approximately $2k-1$ colors instead of
+  linearly with $k$; IS-removal uses approximately $2k-1$ colors instead of
   $k$, giving an approximation ratio approaching 2 as $k$ grows.
 \end{itemize}
 
-These results confirm that the greedy is a fast but unreliable upper bound: it
-is tight on graphs where the natural vertex order aligns with the chromatic
-structure (complete graphs, odd cycles), but can be far from optimal on
-structured sparse or multipartite graphs.
+These results confirm that IS-removal coloring is a fast but unreliable upper
+bound: it is tight on graphs where the natural vertex order aligns with the
+chromatic structure (complete graphs, odd cycles), but can be far from optimal
+on structured sparse or multipartite graphs.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Complexity Analysis}\label{sec:complexity}
@@ -782,8 +782,8 @@ this is $O(n^2 \cdot 4^n)$.  Empirically (Table~\ref{tab:scaling}), sparse
 graphs such as cycles reach the practical limit around $n = 13$--$14$ (seconds
 to minutes), while dense graphs such as $K_{m,m}$ scale better because
 $|\mathcal{F}|$ is much smaller than $2^n$.  The algorithm is intended for
-exact coloring of small subgraphs; for large graphs the greedy heuristic in
-\texttt{demo\_greedy\_coloring.cpp} is the appropriate choice.
+exact coloring of small subgraphs; for large graphs the IS-removal coloring in
+\texttt{demo\_is\_removal\_coloring.cpp} is the appropriate choice.
 
 \subsection{Space Complexity}
 
@@ -804,9 +804,9 @@ the first nonzero value thus yields $\chi(G)$ exactly.
 
 The algorithm is exponential in $|V|$ and is therefore intended for small
 graphs or for exact coloring of subgraphs within a larger heuristic pipeline.
-The companion greedy coloring algorithm runs in linear time and provides a fast
-upper bound useful as an initialization strategy or a standalone heuristic for
-large instances.
+The companion IS-removal coloring algorithm runs in $O(n + m)$ time per color
+class and provides a fast upper bound useful as an initialization strategy or a
+standalone approximation for large instances.
 
 Future directions include: (i) exploiting symmetry to prune the power-set
 enumeration, (ii) integrating branch-and-bound to improve worst-case behavior,

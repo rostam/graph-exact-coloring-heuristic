@@ -14,8 +14,8 @@ static void print_vec(const vector<T>& v) {
     cout << "\n";
 }
 
-// Returns a greedy independent set by repeatedly picking the lowest-degree
-// vertex and removing it along with all its neighbors.
+// Extracts one independent set by repeatedly picking the first active vertex
+// and removing it along with all its neighbors from the active set.
 static vector<Ver> ind_set(Graph g) {
     vector<Ver> iset;
     vector<Ver> U;
@@ -38,8 +38,10 @@ static vector<Ver> ind_set(Graph g) {
     return iset;
 }
 
-// Returns a greedy coloring by repeatedly extracting independent sets.
-static vector<int> greedy_color(Graph g) {
+// IS-removal coloring: repeatedly extracts an independent set, assigns it the
+// next color, removes those vertices' edges, and repeats until the graph is
+// edge-free.
+static vector<int> is_removal_color(Graph g) {
     int cur_color = 0;
     vector<Ver> U;
     vector<int> coloring(boost::num_vertices(g), 0);
@@ -61,7 +63,7 @@ static vector<int> greedy_color(Graph g) {
 
 int main() {
     Graph g = Cycle(5).generate();
-    vector<int> coloring = greedy_color(g);
+    vector<int> coloring = is_removal_color(g);
     print_vec(coloring);
     return 0;
 }
