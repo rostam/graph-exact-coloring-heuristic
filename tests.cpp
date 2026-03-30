@@ -1,7 +1,11 @@
 #include <chrono>
+#include <fstream>
 #include <iostream>
+#include <queue>
 #include <sstream>
 #include <string>
+#include <unordered_map>
+#include <vector>
 #include "datatypes.h"
 #include "generators/GeneralizedPeterson.h"
 #include "generators/Cycle.h"
@@ -258,6 +262,121 @@ static void test_interesting_graphs() {
     }
 }
 
+// ── SuiteSparse Matrix Collection ────────────────────────────────────────────
+// Reads a Matrix Market (.mtx) file and builds an undirected graph:
+//   - directed matrices are symmetrized  (edge added for A[i,j] or A[j,i])
+//   - symmetric matrices are read as-is
+//   - diagonal entries (self-loops) and weights are ignored
+//   - the graph is returned with vertices numbered 0 .. n-1
+//
+// The test binary may run from either the project root or the build/
+// subdirectory, so we try both relative paths.
+
+static std::string find_data_file(const std::string& relpath) {
+    if (std::ifstream(relpath))         return relpath;
+    if (std::ifstream("../" + relpath)) return "../" + relpath;
+    return {};
+}
+
+static Graph read_mtx_as_undirected(const std::string& path) {
+    std::ifstream f(path);
+    if (!f) throw std::runtime_error("Cannot open: " + path);
+    // Skip banner and comment lines
+    std::string line;
+    while (std::getline(f, line))
+        if (!line.empty() && line[0] != '%') break;
+    int rows, cols, nnz;
+    std::istringstream(line) >> rows >> cols >> nnz;
+    int n = std::max(rows, cols);
+    Graph g(n);
+    while (std::getline(f, line)) {
+        if (line.empty() || line[0] == '%') continue;
+        std::istringstream ss(line);
+        int r, c;
+        if (!(ss >> r >> c)) continue;
+        r--; c--;  // MTX is 1-indexed
+        if (r != c && r >= 0 && c >= 0 && r < n && c < n)
+            if (!edge(r, c, g).second) add_edge(r, c, g);
+    }
+    return g;
+}
+
+// Returns the induced subgraph on the first k vertices discovered by BFS
+// starting from `start`.  Vertex indices are remapped to 0..k-1.
+static Graph bfs_subgraph(const Graph& g, int start, int k) {
+    std::vector<int> order;
+    std::vector<bool> vis(num_vertices(g), false);
+    std::queue<int> q;
+    q.push(start); vis[start] = true;
+    while (!q.empty() && (int)order.size() < k) {
+        int v = q.front(); q.pop();
+        order.push_back(v);
+        for_each_neighbor(v, g, [&](int u) {
+            if (!vis[u]) { vis[u] = true; q.push(u); }
+        });
+    }
+    order.resize(std::min((int)order.size(), k));
+    std::unordered_map<int,int> idx;
+    for (int i = 0; i < (int)order.size(); i++) idx[order[i]] = i;
+    Graph sub(order.size());
+    for (int i = 0; i < (int)order.size(); i++)
+        for_each_neighbor(order[i], g, [&](int u) {
+            auto it = idx.find(u);
+            if (it != idx.end() && it->second > i)
+                add_edge(i, it->second, sub);
+        });
+    return sub;
+}
+
+static void test_suitesparse() {
+    // vanHeukelum/cage3 — DNA electrophoresis, 3 monomers, directed → symmetrized
+    // 5 vertices, 7 edges after symmetrization (self-loops removed)
+    {
+        auto path = find_data_file("matrices/cage3/cage3.mtx");
+        if (path.empty()) { std::cout << "[SKIP] cage3.mtx not found\n"; }
+        else {
+            Graph g = read_mtx_as_undirected(path);
+            check("vanHeukelum/cage3 (DNA, 5v, 7e): chromatic number = 3",
+                  chromatic_number(g) == 3);
+        }
+    }
+    // vanHeukelum/cage4 — DNA electrophoresis, 4 monomers, directed → symmetrized
+    // 9 vertices, 20 edges after symmetrization
+    {
+        auto path = find_data_file("matrices/cage4/cage4.mtx");
+        if (path.empty()) { std::cout << "[SKIP] cage4.mtx not found\n"; }
+        else {
+            Graph g = read_mtx_as_undirected(path);
+            check("vanHeukelum/cage4 (DNA, 9v, 20e): chromatic number = 3",
+                  chromatic_number(g) == 3);
+        }
+    }
+    // Pajek/GD98_a — Graph Drawing contest 1998, directed, 38 vertices total.
+    // We extract the 10-vertex BFS subgraph from vertex 0 (10v, 10e, χ=3).
+    {
+        auto path = find_data_file("matrices/GD98_a/GD98_a.mtx");
+        if (path.empty()) { std::cout << "[SKIP] GD98_a.mtx not found\n"; }
+        else {
+            Graph full = read_mtx_as_undirected(path);
+            Graph sub  = bfs_subgraph(full, 0, 10);
+            check("Pajek/GD98_a BFS-10 subgraph (contest, 10v, 10e): chromatic number = 3",
+                  chromatic_number(sub) == 3);
+        }
+    }
+    // ndtest.mtx — symmetric FEM-like matrix included in the project, 42 vertices.
+    // 10-vertex BFS subgraph from vertex 0 (10v, 14e, χ=2).
+    {
+        auto path = find_data_file("ndtest.mtx");
+        if (path.empty()) { std::cout << "[SKIP] ndtest.mtx not found\n"; }
+        else {
+            Graph full = read_mtx_as_undirected(path);
+            Graph sub  = bfs_subgraph(full, 0, 10);
+            check("ndtest.mtx BFS-10 subgraph (FEM, 10v, 14e): chromatic number = 2",
+                  chromatic_number(sub) == 2);
+        }
+    }
+}
+
 // ── Scaling tests ────────────────────────────────────────────────────────────
 // Runs chromatic_number() and records wall-clock time so that performance
 // degradation is visible as graph size grows.
@@ -336,6 +455,9 @@ int main() {
 
     std::cout << "\n=== Interesting graph families ===\n";
     test_interesting_graphs();
+
+    std::cout << "\n=== SuiteSparse matrix collection ===\n";
+    test_suitesparse();
 
     std::cout << "\n=== Scaling tests ===\n";
     test_scaling();

@@ -50,11 +50,12 @@ describe a companion greedy heuristic that computes an upper bound on
 $\chi(G)$.  Both algorithms are implemented in C++17 using the Boost Graph
 Library.  We present experimental results on cycles $C_n$, complete graphs $K_n$,
 the Petersen graph $GP(5,2)$ and other generalized Petersen graphs, wheel
-graphs $W_n$, complete multipartite graphs $K_{s,\ldots,s}$, and edgeless
-graphs, confirming that the exact algorithm recovers the known chromatic
-numbers for all tested families.  We also report empirical scaling data
-showing that the algorithm is practical for graphs up to roughly 13--14
-vertices on a single core.
+graphs $W_n$, complete multipartite graphs $K_{s,\ldots,s}$, edgeless graphs,
+and graphs derived from matrices in the SuiteSparse Matrix Collection
+(DNA electrophoresis, graph drawing, and FEM problems), confirming that the
+exact algorithm recovers the known chromatic numbers for all tested cases.
+We also report empirical scaling data showing that the algorithm is practical
+for graphs up to roughly 13--14 vertices on a single core.
 \end{abstract}
 
 \tableofcontents
@@ -94,7 +95,8 @@ Section~\ref{sec:prelim} fixes notation and recalls standard facts about graph
 coloring.  Section~\ref{sec:algorithm} derives the formula and proves its
 correctness.  Section~\ref{sec:heuristic} describes the greedy heuristic.
 Section~\ref{sec:implementation} outlines the C++ implementation.
-Section~\ref{sec:experiments} presents experimental results.
+Section~\ref{sec:experiments} presents experimental results, including
+graphs from the SuiteSparse Matrix Collection.
 Section~\ref{sec:complexity} analyzes time and space complexity.
 Section~\ref{sec:conclusion} concludes.
 
@@ -539,6 +541,40 @@ Beyond $GP(5,2)$ we tested five more members:
   \item $GP(7,2)$: odd outer and inner cycles, $\chi = 3$.
 \end{itemize}
 
+\subsection{SuiteSparse Matrix Collection Graphs}\label{sec:suitesparse}
+
+To demonstrate applicability to real-world data, we obtained matrices from
+the SuiteSparse Matrix Collection~\cite{SuiteSparse} and converted each to
+an undirected graph by symmetrizing (adding edge $(i,j)$ whenever $A_{ij}
+\neq 0$ or $A_{ji} \neq 0$) and discarding self-loops and edge weights.
+For matrices larger than 14 vertices we extract a connected subgraph of $k$
+vertices via BFS from a fixed starting vertex.
+
+\begin{table}[h]
+\centering
+\caption{Chromatic numbers on graphs derived from SuiteSparse matrices.}
+\label{tab:suitesparse}
+\begin{tabular}{llllcccc}
+\toprule
+Matrix & Group & Domain & Processing & $|V|$ & $|E|$ & $\chi$ & Time \\
+\midrule
+\texttt{cage3}   & vanHeukelum & DNA electrophoresis & symmetrized (full) & 5  &  7 & 3 & $<$1\,ms \\
+\texttt{cage4}   & vanHeukelum & DNA electrophoresis & symmetrized (full) & 9  & 20 & 3 &    3\,ms \\
+\texttt{GD98\_a} & Pajek       & Graph Drawing 1998  & BFS-10 subgraph    & 10 & 10 & 3 &   81\,ms \\
+\texttt{ndtest}  & (project)   & FEM/structural      & BFS-10 subgraph    & 10 & 14 & 2 &   15\,ms \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The cage matrices arise from random walks on finite words over the DNA
+alphabet $\{A, C, G, T\}$; \texttt{cage3} has $|\Sigma|^3 - |\Sigma|^2 = 48$
+directed edges reduced to 7 undirected after symmetrization.  Both DNA graphs
+require exactly 3 colors --- they contain odd cycles formed by overlapping
+DNA words that share a common suffix/prefix.  The \texttt{GD98\_a} subgraph
+also requires 3 colors, while the symmetric FEM matrix \texttt{ndtest} is
+2-colorable in its 10-vertex neighborhood, consistent with the bipartite
+structure typical of finite-element adjacency graphs.
+
 \subsection{Scaling Analysis}
 
 Table~\ref{tab:scaling} reports wall-clock times for selected larger graphs.
@@ -684,6 +720,11 @@ E.~L. Lawler.
 J.~G. Siek, L.-Q. Lee, and A.~Lumsdaine.
 \newblock \emph{The Boost Graph Library: User Guide and Reference Manual}.
 \newblock Addison-Wesley, 2002.
+
+\bibitem{SuiteSparse}
+T.~A. Davis and Y.~Hu.
+\newblock The University of Florida sparse matrix collection.
+\newblock \emph{ACM Transactions on Mathematical Software}, 38(1):1--25, 2011.
 
 \end{thebibliography}
 

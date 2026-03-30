@@ -85,7 +85,23 @@ Timing was measured on a single core (Release build, Ubuntu 22.04).
 | GP(6,2) | — | 12 | 18 | 3 |
 | GP(7,2) | — | 14 | 21 | 3 |
 
-65 test assertions, 0 failures.
+### SuiteSparse Matrix Collection
+
+Matrices from the [SuiteSparse collection](https://sparse.tamu.edu/) are converted to
+undirected graphs by symmetrizing (directed edges ignored, weights stripped, self-loops removed).
+Large matrices are reduced to a k-vertex BFS subgraph.
+
+| Matrix | Group | Domain | Processing | V | E | χ | Time |
+|---|---|---|---|:-:|:-:|:-:|--:|
+| `cage3` | vanHeukelum | DNA electrophoresis | full (symmetrized) | 5 | 7 | 3 | <1 ms |
+| `cage4` | vanHeukelum | DNA electrophoresis | full (symmetrized) | 9 | 20 | 3 | 3 ms |
+| `GD98_a` | Pajek | Graph Drawing contest 1998 | BFS-10 subgraph | 10 | 10 | 3 | 81 ms |
+| `ndtest` | (project) | FEM/structural | BFS-10 subgraph | 10 | 14 | 2 | 15 ms |
+
+The `matrices/` directory contains these `.mtx` files. The test suite reads
+them automatically and skips with `[SKIP]` if a file is not found.
+
+69 test assertions, 0 failures.
 
 ### Scaling — wall-clock time
 
