@@ -392,60 +392,60 @@ All experiments were run on the \texttt{tests} binary compiled with
 \texttt{-std=c++17 --openmp -O2} on Ubuntu 22.04.  Table~\ref{tab:results}
 summarizes the chromatic numbers recovered by the exact algorithm.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
-\caption{Chromatic numbers computed by the exact algorithm (78 assertions, all passing).}
+\caption{Results for both algorithms (78 exact assertions, all passing).
+  ``IS'' = IS-removal colors; $=$ means optimal, $>$ means over-estimate.}
 \label{tab:results}
-\begin{tabular}{llcccc}
+\begin{tabular}{llccccc}
 \toprule
-Graph & Description & $|V|$ & $|E|$ & $\chi$ (computed) & Known $\chi$ \\
+Graph & Description & $|V|$ & $|E|$ & $\chi$ & IS & IS vs.\ $\chi$ \\
 \midrule
-\multicolumn{6}{l}{\textit{Cycle graphs}} \\
-$C_3$ & Triangle / $K_3$         & 3  & 3  & 3 & 3 \\
-$C_4$ & 4-cycle (square)         & 4  & 4  & 2 & 2 \\
-$C_5$ & 5-cycle (pentagon)       & 5  & 5  & 3 & 3 \\
-$C_6$ & 6-cycle (hexagon)        & 6  & 6  & 2 & 2 \\
-$C_7$ & 7-cycle                  & 7  & 7  & 3 & 3 \\
+\multicolumn{7}{l}{\textit{Cycle graphs}} \\
+$C_3$ & Triangle                    & 3  & 3   & 3  & 3  & $=$ \\
+$C_4$ & 4-cycle (square)            & 4  & 4   & 2  & 4  & $+2$ \\
+$C_5$ & 5-cycle (pentagon)          & 5  & 5   & 3  & 3  & $=$ \\
+$C_6$ & 6-cycle (hexagon)           & 6  & 6   & 2  & 4  & $+2$ \\
+$C_7$ & 7-cycle                     & 7  & 7   & 3  & 3  & $=$ \\
 \midrule
-\multicolumn{6}{l}{\textit{Complete and edgeless graphs}} \\
-$K_1$ & Single vertex            & 1  & 0  & 1 & 1 \\
-$K_2$ & Single edge              & 2  & 1  & 2 & 2 \\
-$K_3$ & Triangle                 & 3  & 3  & 3 & 3 \\
-$K_4$ & Complete graph           & 4  & 6  & 4 & 4 \\
-$K_9$ & Complete graph           & 9  & 36 & 9 & 9 \\
-$K_{10}$ & Complete graph        & 10 & 45 & 10 & 10 \\
-$E_1$ & Isolated vertex          & 1  & 0  & 1 & 1 \\
-$E_3$ & Three isolated vertices  & 3  & 0  & 1 & 1 \\
+\multicolumn{7}{l}{\textit{Complete and edgeless graphs}} \\
+$K_1$ & Single vertex               & 1  & 0   & 1  & 1  & $=$ \\
+$K_2$ & Single edge                 & 2  & 1   & 2  & 2  & $=$ \\
+$K_3$ & Triangle                    & 3  & 3   & 3  & 3  & $=$ \\
+$K_4$ & Complete graph              & 4  & 6   & 4  & 4  & $=$ \\
+$K_9$ & Complete graph              & 9  & 36  & 9  & 9  & $=$ \\
+$K_{10}$ & Complete graph           & 10 & 45  & 10 & 10 & $=$ \\
+$E_1$ & Isolated vertex             & 1  & 0   & 1  & 1  & $=$ \\
+$E_3$ & Three isolated vertices     & 3  & 0   & 1  & 1  & $=$ \\
 \midrule
-\multicolumn{6}{l}{\textit{Bipartite graphs}} \\
-$K_{2,3}$ & Complete bipartite   & 5  & 6  & 2 & 2 \\
+\multicolumn{7}{l}{\textit{Bipartite graphs}} \\
+$K_{2,3}$ & Complete bipartite      & 5  & 6   & 2  & 3  & $+1$ \\
 \midrule
-\multicolumn{6}{l}{\textit{Wheel graphs} $W_n$ = hub $+\,C_{n-1}$;
-  $\chi=3$ if $n$ odd, $\chi=4$ if $n$ even} \\
-$W_5$ & Hub $+\,C_4$ (even rim)     & 5  & 8  & 3 & 3 \\
-$W_6$ & Hub $+\,C_5$ (odd rim)      & 6  & 10 & 4 & 4 \\
-$W_7$ & Hub $+\,C_6$ (even rim)     & 7  & 12 & 3 & 3 \\
-$W_8$ & Hub $+\,C_7$ (odd rim)      & 8  & 14 & 4 & 4 \\
-$W_9$ & Hub $+\,C_8$ (even rim)     & 9  & 16 & 3 & 3 \\
+\multicolumn{7}{l}{\textit{Wheel graphs} $W_n$; $\chi=3$ if $n$ odd, $\chi=4$ if $n$ even} \\
+$W_5$ & Hub $+\,C_4$ (even rim)     & 5  & 8   & 3  & 5  & $+2$ \\
+$W_6$ & Hub $+\,C_5$ (odd rim)      & 6  & 10  & 4  & 4  & $=$ \\
+$W_7$ & Hub $+\,C_6$ (even rim)     & 7  & 12  & 3  & 5  & $+2$ \\
+$W_8$ & Hub $+\,C_7$ (odd rim)      & 8  & 14  & 4  & 4  & $=$ \\
+$W_9$ & Hub $+\,C_8$ (even rim)     & 9  & 16  & 3  & 5  & $+2$ \\
 \midrule
-\multicolumn{6}{l}{\textit{Complete multipartite graphs};
+\multicolumn{7}{l}{\textit{Complete multipartite graphs};
   $\chi(K_{s,\ldots,s}^{(k)}) = k$} \\
-$K_{2,2,2}$   & Octahedron            & 6  & 12 & 3 & 3 \\
-$K_{3,3,3}$   & Complete 3-partite    & 9  & 27 & 3 & 3 \\
-$K_{2,2,2,2}$ & Complete 4-partite    & 8  & 24 & 4 & 4 \\
-$K_{2\times5}$ & Complete 5-partite   & 10 & 40 & 5 & 5 \\
-$K_{2\times6}$ & Complete 6-partite   & 12 & 60 & 6 & 6 \\
-$K_{2\times7}$ & Complete 7-partite   & 14 & 84 & 7 & 7 \\
-$K_{2\times8}$ & Complete 8-partite   & 16 & 112 & 8 & 8 \\
-$K_{2\times9}$ & Complete 9-partite   & 18 & 144 & 9 & 9 \\
+$K_{2,2,2}$    & Octahedron          & 6  & 12  & 3  & 5  & $+2$ \\
+$K_{3,3,3}$    & Complete 3-partite  & 9  & 27  & 3  & 7  & $+4$ \\
+$K_{2,2,2,2}$  & Complete 4-partite  & 8  & 24  & 4  & 7  & $+3$ \\
+$K_{2\times5}$ & Complete 5-partite  & 10 & 40  & 5  & 9  & $+4$ \\
+$K_{2\times6}$ & Complete 6-partite  & 12 & 60  & 6  & 11 & $+5$ \\
+$K_{2\times7}$ & Complete 7-partite  & 14 & 84  & 7  & 13 & $+6$ \\
+$K_{2\times8}$ & Complete 8-partite  & 16 & 112 & 8  & 15 & $+7$ \\
+$K_{2\times9}$ & Complete 9-partite  & 18 & 144 & 9  & 17 & $+8$ \\
 \midrule
-\multicolumn{6}{l}{\textit{Generalized Petersen graphs} $GP(n,k)$} \\
-$GP(4,1)$ & 3-cube $Q_3$ (bipartite)    & 8  & 12 & 2 & 2 \\
-$GP(5,1)$ & Pentagonal prism            & 10 & 15 & 3 & 3 \\
-$GP(5,2)$ & Petersen graph              & 10 & 15 & 3 & 3 \\
-$GP(6,1)$ & Hexagonal prism (bipartite) & 12 & 18 & 2 & 2 \\
-$GP(6,2)$ & ---                         & 12 & 18 & 3 & 3 \\
-$GP(7,2)$ & ---                         & 14 & 21 & 3 & 3 \\
+\multicolumn{7}{l}{\textit{Generalized Petersen graphs} $GP(n,k)$} \\
+$GP(4,1)$ & 3-cube $Q_3$ (bipartite) & 8  & 12  & 2  & 6  & $+4$ \\
+$GP(5,1)$ & Pentagonal prism         & 10 & 15  & 3  & 3  & $=$ \\
+$GP(5,2)$ & Petersen graph           & 10 & 15  & 3  & 4  & $+1$ \\
+$GP(6,1)$ & Hexagonal prism          & 12 & 18  & 2  & 6  & $+4$ \\
+$GP(6,2)$ & ---                      & 12 & 18  & 3  & 4  & $+1$ \\
+$GP(7,2)$ & ---                      & 14 & 21  & 3  & 4  & $+1$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -454,6 +454,8 @@ All 78 test assertions pass, confirming both the zero/nonzero behavior of
 $c_k$ and, for complete graphs, the exact value of the formula at $k = \chi(G)$.
 In particular, $c_k(K_9, 9) = 9! = 362{,}880$ and $c_k(K_{10}, 10) = 10! = 3{,}628{,}800$
 are verified exactly, confirming the correctness of the \texttt{long long} accumulation.
+The rightmost columns show the IS-removal coloring result alongside $\chi$ for
+direct comparison.
 
 \subsection{Exact Values of $c_k$ at the Chromatic Number}
 
@@ -561,16 +563,17 @@ vertices via BFS from a fixed starting vertex.
 
 \begin{table}[h]
 \centering
-\caption{Chromatic numbers on graphs derived from SuiteSparse matrices.}
+\caption{Results on graphs derived from SuiteSparse matrices.
+  IS = IS-removal colors; Time = exact algorithm wall-clock time.}
 \label{tab:suitesparse}
-\begin{tabular}{llllcccc}
+\begin{tabular}{lllcccccc}
 \toprule
-Matrix & Group & Domain & Processing & $|V|$ & $|E|$ & $\chi$ & Time \\
+Matrix & Group & Processing & $|V|$ & $|E|$ & $\chi$ & IS & IS vs.\ $\chi$ & Time \\
 \midrule
-\texttt{cage3}   & vanHeukelum & DNA electrophoresis & symmetrized (full) & 5  &  7 & 3 & $<$1\,ms \\
-\texttt{cage4}   & vanHeukelum & DNA electrophoresis & symmetrized (full) & 9  & 20 & 3 &    3\,ms \\
-\texttt{GD98\_a} & Pajek       & Graph Drawing 1998  & BFS-10 subgraph    & 10 & 10 & 3 &   81\,ms \\
-\texttt{ndtest}  & (project)   & FEM/structural      & BFS-10 subgraph    & 10 & 14 & 2 &   15\,ms \\
+\texttt{cage3}   & vanHeukelum & symmetrized (full) & 5  &  7 & 3 & 4 & $+1$ & $<$1\,ms \\
+\texttt{cage4}   & vanHeukelum & symmetrized (full) & 9  & 20 & 3 & 7 & $+4$ &    3\,ms \\
+\texttt{GD98\_a} & Pajek       & BFS-10 subgraph    & 10 & 10 & 3 & 3 & $=$ &   81\,ms \\
+\texttt{ndtest}  & (project)   & BFS-10 subgraph    & 10 & 14 & 2 & 6 & $+4$ &   15\,ms \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -648,78 +651,31 @@ algorithm scales well despite the large chromatic number.
 
 \begin{table}[h]
 \centering
-\caption{High chromatic number graphs (Release build, single core).}
+\caption{High chromatic number graphs (Release build, single core).
+  IS = IS-removal colors; Time = exact algorithm wall-clock time.}
 \label{tab:highchi}
-\begin{tabular}{lcccc}
+\begin{tabular}{lccccc}
 \toprule
-Graph & $V$ & $E$ & $\chi$ & Time \\
+Graph & $V$ & $E$ & $\chi$ & IS & Time \\
 \midrule
-$K_9$         & 9  & 36 & 9 & 3\,ms \\
-$K_{10}$      & 10 & 45 & 10 & 9\,ms \\
-$K_{2\times5}$ & 10 & 40 & 5 & 7\,ms \\
-$K_{2\times6}$ & 12 & 60 & 6 & 47\,ms \\
-$K_{2\times7}$ & 14 & 84 & 7 & 287\,ms \\
-$K_{2\times8}$ & 16 & 112 & 8 & 1.1\,s \\
-$K_{2\times9}$ & 18 & 144 & 9 & 5.5\,s \\
+$K_9$          & 9  & 36  & 9  & 9  & 3\,ms \\
+$K_{10}$       & 10 & 45  & 10 & 10 & 9\,ms \\
+$K_{2\times5}$ & 10 & 40  & 5  & 9  & 7\,ms \\
+$K_{2\times6}$ & 12 & 60  & 6  & 11 & 47\,ms \\
+$K_{2\times7}$ & 14 & 84  & 7  & 13 & 287\,ms \\
+$K_{2\times8}$ & 16 & 112 & 8  & 15 & 1.1\,s \\
+$K_{2\times9}$ & 18 & 144 & 9  & 17 & 5.5\,s \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{IS-Removal vs.\ Exact Coloring}\label{sec:greedy_vs_exact}
 
-Table~\ref{tab:greedy} compares the number of colors produced by IS-removal
-coloring (Algorithm~\ref{alg:greedycol}) against the true chromatic number
-$\chi(G)$ on the same graph families.  The algorithm processes vertices in
-ascending index order, so its quality depends strongly on the vertex ordering.
-
-\begin{table}[ht]
-\centering
-\caption{IS-removal coloring vs.\ exact chromatic number $\chi(G)$.
-  ``='' means IS-removal is optimal; ``$>$'' means it over-estimates.}
-\label{tab:greedy}
-\begin{tabular}{llcccc}
-\toprule
-Graph & Family & $\chi$ & IS-removal & $\Delta(G)$ & Note \\
-\midrule
-\multicolumn{6}{l}{\textit{Cycles}} \\
-$C_3$  & Odd cycle  & 3 & 3  & 2 & = optimal \\
-$C_4$  & Even cycle & 2 & 4  & 2 & $2\times$ optimum \\
-$C_5$  & Odd cycle  & 3 & 3  & 2 & = optimal \\
-$C_6$  & Even cycle & 2 & 4  & 2 & $2\times$ optimum \\
-$C_7$  & Odd cycle  & 3 & 3  & 2 & = optimal \\
-\midrule
-\multicolumn{6}{l}{\textit{Complete graphs}} \\
-$K_2$  & Complete & 2  & 2  & 1 & = optimal \\
-$K_3$  & Complete & 3  & 3  & 2 & = optimal \\
-$K_4$  & Complete & 4  & 4  & 3 & = optimal \\
-$K_5$  & Complete & 5  & 5  & 4 & = optimal \\
-$K_{10}$ & Complete & 10 & 10 & 9 & = optimal \\
-\midrule
-\multicolumn{6}{l}{\textit{Bipartite}} \\
-$K_{2,3}$ & Complete bipartite & 2 & 3 & 3 & over by 1 \\
-\midrule
-\multicolumn{6}{l}{\textit{Wheel graphs} $W_n$} \\
-$W_5$  & Odd $n$, even rim & 3 & 5 & 4 & over by 2 \\
-$W_6$  & Even $n$, odd rim & 4 & 4 & 5 & = optimal \\
-$W_7$  & Odd $n$, even rim & 3 & 5 & 6 & over by 2 \\
-$W_8$  & Even $n$, odd rim & 4 & 4 & 7 & = optimal \\
-\midrule
-\multicolumn{6}{l}{\textit{Complete multipartite}} \\
-$K_{2,2,2}$   & Octahedron       & 3 & 5  & 4 & over by 2 \\
-$K_{2,2,2,2}$ & 4-partite        & 4 & 7  & 6 & over by 3 \\
-$K_{2\times5}$ & 5-partite       & 5 & 9  & 8 & over by 4 \\
-$K_{2\times9}$ & 9-partite       & 9 & 17 & 16 & over by 8 \\
-\midrule
-\multicolumn{6}{l}{\textit{Generalized Petersen graphs}} \\
-$GP(5,1)$ & Pentagonal prism & 3 & 3 & 3 & = optimal \\
-$GP(5,2)$ & Petersen graph   & 3 & 4 & 3 & over by 1 \\
-$GP(6,1)$ & Hexagonal prism  & 2 & 6 & 3 & $3\times$ optimum \\
-$GP(7,2)$ & ---              & 3 & 4 & 3 & over by 1 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The results illustrate several patterns:
+The IS-removal column in Tables~\ref{tab:results}--\ref{tab:highchi} shows
+the number of colors produced by Algorithm~\ref{alg:greedycol} on each graph.
+The algorithm processes vertices in ascending index order, so its quality
+depends strongly on the vertex ordering.  The results illustrate several
+patterns:
 
 \begin{itemize}
 \item \textbf{Complete graphs}: IS-removal is always optimal.  Because every
